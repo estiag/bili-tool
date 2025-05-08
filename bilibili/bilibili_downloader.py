@@ -128,10 +128,10 @@ def get_video_url(api_result, quality):
     available_best_quality = api_result.get_callback_result().get('available_best_quality')
     if not quality:
         quality = available_best_quality
-    if quality not in available_video:
+    if str(quality) not in available_video:
         logger.info(f'quality {quality} is not available, chose {available_best_quality}')
         quality = available_best_quality
-    best_video = available_video.get(quality)
+    best_video = available_video.get(str(quality))
     logger.info(
         f'已选择质量 {quality} 分辨率:{best_video.get("width")}x{best_video.get("height")} 帧率{best_video.get("frame_rate")}')
     return best_video.get('backup_url')[0]
@@ -276,6 +276,26 @@ def download_video(url, p_codes=None, quality=None):
             sub_video_detail = Api(bilibili_common.format_url(url, p=episode.get('p'))).headers(
                 bilibili_common.get_headers()).callback(get_detail_callback).send()
             download_and_combine(sub_video_detail, quality)
+    else:
+        download_and_combine(video_detail, quality)
+
+
+def download_video_for_web(url, p_code, quality=None):
+    """
+    下载指定url或bv code的视频或视频合集
+    @:param quality 视频清晰度id
+    对外提供
+    """
+    p_code = str(p_code)
+    video_detail = get_detail(url)
+    video_detail_json = video_detail.get_callback_result()
+    if video_detail_json.get('is_list'):
+        episodes = video_detail_json.get('episodes')
+        episode_for_download = next(filter(lambda x: str(x.get('p')) == p_code, episodes))
+        logger.info(f'准备下载 {episode_for_download.get("title")}')
+        sub_video_detail = Api(bilibili_common.format_url(url, p=episode_for_download.get('p'))).headers(
+            bilibili_common.get_headers()).callback(get_detail_callback).send()
+        download_and_combine(sub_video_detail, quality)
     else:
         download_and_combine(video_detail, quality)
 

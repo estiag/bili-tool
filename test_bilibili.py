@@ -92,12 +92,16 @@ class TestBilibili(unittest.TestCase):
         Api('http://localhost:5000/system/user/theme').send_and_print()
 
     def test_set_theme(self):
-        Api('http://localhost:5000/system/user/theme/dark')\
+        Api('http://localhost:5000/system/user/theme/dark') \
             .method('post').send_and_print()
 
     def test_yield(self):
         def loop():
             for i in range(10):
                 yield i
+
         for item in loop():
             print(item)
+
+    def test_download_video_web(self):
+        bili_down.download_video_for_web('BV1tkVpzFE1k', p_code=1, quality=16)
