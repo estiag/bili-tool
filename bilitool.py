@@ -4,6 +4,7 @@ import webview
 
 from config.logger_config import get_logger
 from flask import Flask, render_template, request, send_file, make_response, send_from_directory
+from utils import conf_util
 
 # logger需要再引入自定义模块之前加载，否则会先加载自定义模块中的logger
 logger = get_logger('serverHandler')
@@ -62,16 +63,19 @@ def page_bilibili_img_downloaded():
 
 @app.route("/bilibili/info/followings/<vmid>", methods=['POST'])
 def get_bilibili_followings(vmid):
-    ps = request.get_json().get('ps')
-    pn = request.get_json().get('pn')
-    resp = bili_down.get_followings(vmid, ps=ps, pn=pn)
-    if resp.get('code') not in [200, 0]:
-        return make_response(resp.get('message'), 500)
-    data = resp.get('data')
-    for i in data.get('list'):
-        face = i.get('face')
-        i.update({'face_url': f'/bilibili/info/avatar?url={face}'})
-    return data
+    try:
+        ps = request.get_json().get('ps')
+        pn = request.get_json().get('pn')
+        resp = bili_down.get_followings(vmid, ps=ps, pn=pn)
+        if resp.get('code') not in [200, 0]:
+            return make_response(resp.get('message'), 500)
+        data = resp.get('data')
+        for i in data.get('list'):
+            face = i.get('face')
+            i.update({'face_url': f'/bilibili/info/avatar?url={face}'})
+        return data
+    except Exception:
+        return '未登录', 500
 
 
 @app.route("/bilibili/info/avatar", methods=['GET'])
@@ -183,21 +187,27 @@ def bilibili_api_qrscan():
 
 @app.route("/bilibili/info/user/<vmid>", methods=['GET'])
 def get_bilibili_user_info(vmid):
-    resp = bili_api_down.get_user_info(vmid)
-    if resp.get('code') not in [200, 0]:
-        return make_response(resp.get('message'), 500)
-    data = resp.get('data')
-    data.update({'face': f'/bilibili/info/avatar?url={data.get("face")}'})
-    return data
+    try:
+        resp = bili_api_down.get_user_info(vmid)
+        if resp.get('code') not in [200, 0]:
+            return make_response(resp.get('message'), 500)
+        data = resp.get('data')
+        data.update({'face': f'/bilibili/info/avatar?url={data.get("face")}'})
+        return data
+    except Exception as e:
+        return '未登录', 500
 
 
 @app.route("/bilibili/info/user/card/<vmid>", methods=['GET'])
 def get_bilibili_user_card_info(vmid):
-    resp = bili_api_down.get_user_card_info(vmid)
-    if resp.get('code') not in [200, 0]:
-        return make_response(resp.get('message'), 500)
-    data = resp.get('data')
-    return data
+    try:
+        resp = bili_api_down.get_user_card_info(vmid)
+        if resp.get('code') not in [200, 0]:
+            return make_response(resp.get('message'), 500)
+        data = resp.get('data')
+        return data
+    except Exception:
+        return '未登录', 500
 
 
 @app.route("/bilibili/video/download/list", methods=['GET'])
@@ -232,6 +242,24 @@ def bilibili_current_user():
         return ''
 
 
+@app.route("/system/user/theme", methods=['GET'])
+def get_current_theme():
+    try:
+        return conf_util.get_user_conf('theme')
+    except Exception:
+        return 'light'
+
+
+@app.route("/system/user/theme/<theme>", methods=['POST'])
+def set_current_theme(theme):
+    try:
+        if theme in ['light', 'dark']:
+            conf_util.set_user_conf('theme', theme)
+    except Exception:
+        pass
+    return 'ok'
+
+
 def start_server():
     app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
 
@@ -243,6 +271,6 @@ def start_webview():
 
 if __name__ == "__main__":
     # 仅启动flask
-    #start_server()
+    start_server()
     # 启动webview
-    start_webview()
+    # start_webview()

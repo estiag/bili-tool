@@ -1,7 +1,7 @@
 from api.api import Env
 from urllib.parse import urlparse, urlunparse
 import utils.validate_util as validate_util
-from utils.conf_util import get_bilibili_conf
+from utils import conf_util
 
 env_bilibili = Env(host='www.bilibili.com', protocol='https')
 env_bilibili_api = Env(host='api.bilibili.com', protocol='https')
@@ -52,15 +52,15 @@ def get_headers():
     return {
         'origin': 'https://www.bilibili.com',
         'referer': 'https://www.bilibili.com',
-        'user-agent': get_bilibili_conf("bilibili_user_agent"),
-        'cookie': get_bilibili_conf("bilibili_cookie"),
+        'user-agent': conf_util.get_bilibili_conf("bilibili_user_agent"),
+        'cookie': conf_util.get_user_conf("bilibili_cookie"),
     }
 
 def get_base_headers():
     return {
         'origin': 'https://www.bilibili.com',
         'referer': 'https://www.bilibili.com',
-        'user-agent': get_bilibili_conf("bilibili_user_agent"),
+        'user-agent': conf_util.get_bilibili_conf("bilibili_user_agent"),
     }
 
 

@@ -19,7 +19,7 @@
 
 <body>
 <div id="app" v-cloak>
-    <div class="max-w-3xl mx-auto px-16">
+    <div class="max-w-3xl mx-auto">
           <nav class="navbar p-0 w-full">
             <h3 class=" mt-0 text-xl font-semibold leading-normal">
                 <a href="/">首页</a>->用户信息
@@ -27,7 +27,7 @@
           </nav>
         </div>
 
-    <div class="max-w-3xl mx-auto pb-6 pt-12 text-center transition-all" :class="{'m-[20vh]':!userinfo}">
+    <div class="max-w-3xl mx-auto pb-6 text-center transition-all" :class="{'m-[20vh]':!userinfo}">
        <tips ref="child"></tips>
         <div class="join">
             <input v-model="vmid" class="input input-bordered join-item rounded-l-full" placeholder="vmid"
@@ -185,9 +185,9 @@
                         appIns.search()
                     })
                     .catch(error => {
-                        app.$refs.child.visible=true
-                        app.$refs.child.message=error.response.data
-                        setTimeout(function(){app.$refs.child.visible=false},2000)
+                        appIns.$refs.child.visible=true
+                        appIns.$refs.child.message=error.response.data
+                        setTimeout(function(){appIns.$refs.child.visible=false},2000)
                     });
             }
         },

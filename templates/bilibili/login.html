@@ -50,7 +50,8 @@
                                 if(response.data.code==0){
                                     clearInterval(timer)
                                     console.log('登陆成功')
-                                    location.href='/bilibili/info/user/view?vmid='+response.data.vmid
+                                    //location.href='/bilibili/info/user/view?vmid='+response.data.vmid
+                                    location.href='/'
                                 }else{
                                     console.log(response.data.message)
                                 }

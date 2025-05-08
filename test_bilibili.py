@@ -1,7 +1,6 @@
+import time
 import urllib.parse
 
-import utils.conf_util
-from config.logger_config import get_logger
 import bilibili.bilibili_downloader as bili_down
 import bilibili.bilibili_api_downloader as bili_api_down
 import unittest
@@ -12,8 +11,7 @@ import utils.validate_util as validate_util
 from utils.ffmpeg_util import check_ffmpeg
 import bilibili.bilibili_common as bilibili_common
 import bilibili.wbi as wbi
-
-logger = get_logger()
+from api.api import Api
 
 
 class TestBilibili(unittest.TestCase):
@@ -82,10 +80,24 @@ class TestBilibili(unittest.TestCase):
         print(format_json(result))
 
     def test_set_cookie_conf(self):
-        conf_util.set_bilibili_conf('bilibili_cookie', 'a')
+        conf_util.set_user_conf('bilibili_cookie', 'a')
 
     def test_get_video_download_list(self):
         print(bili_api_down.get_bilibili_video_download_files())
 
     def test_get_current_user_vmmid(self):
         print(bili_api_down.get_current_vmid())
+
+    def test_get_theme(self):
+        Api('http://localhost:5000/system/user/theme').send_and_print()
+
+    def test_set_theme(self):
+        Api('http://localhost:5000/system/user/theme/dark')\
+            .method('post').send_and_print()
+
+    def test_yield(self):
+        def loop():
+            for i in range(10):
+                yield i
+        for item in loop():
+            print(item)

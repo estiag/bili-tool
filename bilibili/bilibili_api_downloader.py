@@ -10,11 +10,12 @@ from urllib.parse import urlunparse, urlencode, parse_qs, urlparse
 import bilibili.bilibili_common as bilibili_common
 import bilibili.wbi as wbi
 import utils.traffic_utils as tfu
-from utils.conf_util import get_bilibili_conf, set_bilibili_conf
+from utils import conf_util
 import os
 import subprocess
 import utils.ffmpeg_util as ffmpeg_util
 from flask import send_from_directory
+
 
 logger = get_logger()
 
@@ -92,8 +93,8 @@ def get_video_info(bvid=None, avid=None, cid=None, qn=None):
 
 def combine_video(path_result):
     mp4_filename = os.path.basename(path_result.get("video_path"))
-    os.makedirs(get_bilibili_conf("bilibili_video_path"), exist_ok=True)
-    final_video_path = f'{get_bilibili_conf("bilibili_video_path")}/{mp4_filename}'
+    os.makedirs(conf_util.get_bilibili_conf("bilibili_video_path"), exist_ok=True)
+    final_video_path = f'{conf_util.get_bilibili_conf("bilibili_video_path")}/{mp4_filename}'
     subprocess.run([f'{ffmpeg_util.ffmpeg_exe_full_path}',
                     '-i',
                     path_result.get('video_path'),
@@ -148,11 +149,11 @@ def login_qrcode_poll(qrcode_key):
     if poll_json.get('data').get('code') == 0:
         logger.info('login success')
         cookie = poll_resp.headers.get('Set-Cookie') + ';buvid3=2E0558B8-BHFD-95AL-0B6D-5D43BD2CC4s1719-022052r12'
-        set_bilibili_conf('bilibili_cookie', cookie)
+        conf_util.set_user_conf('bilibili_cookie', cookie)
         query = urlparse(poll_json.get('data').get('url')).query
         vmid = parse_qs(query).get('DedeUserID')[0]
         # 存储当前用户
-        set_bilibili_conf('bilibili_current_vmid', vmid)
+        conf_util.set_user_conf('bilibili_current_vmid', vmid)
     return {
         'code': poll_json.get('data').get('code'),
         'message': poll_json.get('data').get('message'),
@@ -192,8 +193,8 @@ def get_user_card_info(vmid):
 
 def get_bilibili_video_download_files():
     video_files = []
-    for filename in os.listdir(get_bilibili_conf("bilibili_video_path")):
-        file_path = os.path.join(get_bilibili_conf("bilibili_video_path"), filename)
+    for filename in os.listdir(conf_util.get_bilibili_conf("bilibili_video_path")):
+        file_path = os.path.join(conf_util.get_bilibili_conf("bilibili_video_path"), filename)
         if os.path.isfile(file_path) and filename.endswith(('.mp4', '.avi', '.mov')):
             video_files.append({'name': filename})
     return video_files
@@ -201,20 +202,20 @@ def get_bilibili_video_download_files():
 
 def get_bilibili_img_download_files():
     video_files = []
-    for filename in os.listdir(get_bilibili_conf("bilibili_image_path")):
-        file_path = os.path.join(get_bilibili_conf("bilibili_image_path"), filename)
+    for filename in os.listdir(conf_util.get_bilibili_conf("bilibili_image_path")):
+        file_path = os.path.join(conf_util.get_bilibili_conf("bilibili_image_path"), filename)
         if os.path.isfile(file_path) and filename.endswith(('.jpg', '.png', '.nef')):
             video_files.append({'name': filename})
     return video_files
 
 
 def get_bilibili_video_download_stream(filename):
-    return send_from_directory(get_bilibili_conf("bilibili_video_path"), filename)
+    return send_from_directory(conf_util.get_bilibili_conf("bilibili_video_path"), filename)
 
 
 def get_bilibili_img_download_stream(filename):
-    return send_from_directory(get_bilibili_conf("bilibili_image_path"), filename)
+    return send_from_directory(conf_util.get_bilibili_conf("bilibili_image_path"), filename)
 
 
 def get_current_vmid():
-    return get_bilibili_conf('bilibili_current_vmid')
+    return conf_util.get_user_conf('bilibili_current_vmid')

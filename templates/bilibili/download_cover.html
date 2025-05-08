@@ -8,8 +8,10 @@
         if (localStorage.getItem('theme')) {
             document.getElementsByTagName('html')[0].dataset.theme = localStorage.getItem('theme')
         }
+
     </script>
     <script src="{{ url_for('static', filename='js/vue.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/alert.js') }}"></script>
     <script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/tailwindcss.3.4.16.js') }}"></script>
     <link href="{{ url_for('static', filename='css/daisyui@4.12.23.css') }}" rel="stylesheet" type="text/css"/>
@@ -18,14 +20,14 @@
 
 <body>
 <div id="app" v-cloak>
-    <div class="max-w-3xl mx-auto px-16">
+    <div class="max-w-3xl mx-auto">
         <nav class="navbar p-0 w-full">
             <h3 class=" mt-0 text-xl font-semibold leading-normal">
                 <a href="/">首页</a>->下载封面
             </h3>
         </nav>
     </div>
-    <div class="max-w-3xl mx-auto pb-6 pt-12 text-center transition-all" :class="{'m-[20vh]':!cover_url}">
+    <div class="max-w-3xl mx-auto pb-6 text-center transition-all" :class="{'m-[20vh]':!cover_url}">
         <tips ref="child"></tips>
         <div class="join w-full">
             <input v-model="url" class="input input-bordered w-full join-item rounded-l-full" placeholder="bvid或url"
@@ -96,6 +98,7 @@
             }
         }
     })
+
 
 </script>
 

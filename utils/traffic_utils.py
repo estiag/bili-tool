@@ -23,7 +23,7 @@ def format_file_size(size):
 
 def download_with_progress(resp, path):
     path_name = os.path.dirname(path)
-    os.makedirs(path_name,exist_ok=True)
+    os.makedirs(path_name, exist_ok=True)
     downloaded = 0
     total_size = int(resp.headers.get('content-length', 0))
     logger.info(f'总大小: {format_file_size(total_size)}')
