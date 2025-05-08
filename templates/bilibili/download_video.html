@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>下载视频</title>
+    <script>
+        if (localStorage.getItem('theme')) {
+            document.getElementsByTagName('html')[0].dataset.theme = localStorage.getItem('theme')
+        }
+
+    </script>
+    <script src="{{ url_for('static', filename='js/vue.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/alert.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/tailwindcss.3.4.16.js') }}"></script>
+    <link href="{{ url_for('static', filename='css/daisyui@4.12.23.css') }}" rel="stylesheet" type="text/css"/>
+    <script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
+    <!--样式来自https://daisyui.com/-->
+</head>
+
+<body>
+<div id="app" v-cloak>
+    <div class="max-w-3xl mx-auto px-16">
+        <nav class="navbar p-0 w-full">
+            <h3 class=" mt-0 text-xl font-semibold leading-normal">
+                <a href="/">首页</a>->下载视频
+            </h3>
+        </nav>
+    </div>
+
+    <div class="max-w-3xl mx-auto pb-6 pt-12 text-center transition-all" :class="{'m-[20vh]':!analyze_result}">
+        <tips ref="child"></tips>
+        <div class="join w-full">
+            <input v-model="url" class="input input-bordered w-full join-item rounded-l-full"
+                   placeholder="bvid或url" @keyup.enter="analyze"/>
+            <button class="btn btn-accent join-item rounded-r-full" :class="{'btn-disabled':!url}" @click="analyze">
+                <span class="loading loading-spinner" v-show="analyzing"></span>
+                解析
+            </button>
+        </div>
+    </div>
+    <div class="max-w-3xl mx-auto pb-2 flex" v-if="analyze_result">
+        <div class="flex items-center pr-2" v-show="analyze_result.is_list">
+            <input type="checkbox" class="checkbox checkbox-accent" v-model="checkAll" @click="clickCheckAll"/>
+        </div>
+        <div class="card card-side shadow-lg w-full">
+            <figure>
+                <img class="max-h-32" :src="cover_url" v-show="cover_url"/>
+            </figure>
+            <div class="card-body truncate">
+                <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold" v-text="analyze_result.title"></p>
+                <div class="card-actions justify-end">
+                    <select class=" select select-info select-sm  max-w-xs"
+                            :value="analyze_result.available_best_quality">
+                        <option disabled>选择清晰度</option>
+                        <option v-for="option in analyze_result.video_quality_option" v-text="option.name"
+                                :value="option.id"></option>
+                    </select>
+                    <button @click="download($event)" class="ml-2 btn btn-accent btn-sm"
+                            :class="{'btn-disabled':analyze_result.is_list && p_codes.length == 0}">
+                        <span class="loading loading-spinner hidden"></span>
+                        <span v-if="analyze_result.is_list">下载已选</span>
+                        <span v-else>下载</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div v-if="analyze_result.is_list">
+        <div v-for="episode in analyze_result.episodes" class="max-w-3xl mx-auto py-1 flex">
+            <div class="flex items-center pr-2">
+                <input type="checkbox" class="checkbox checkbox-accent sub-p-checkbox"
+                       v-model="p_codes" :value="episode.p"
+                       @click="checkCid($event, episode.p, episode.cid, episode.title)"/>
+            </div>
+            <div class="card shadow-inner w-full">
+                <div class="card-body p-4 truncate">
+                    <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold"
+                       v-text="'P'+ episode.p +': '+ episode.title"></p>
+                    <div class="card-actions justify-end">
+                        <select class=" select select-info select-sm  max-w-xs"
+                                :value="analyze_result.available_best_quality">
+                            <option disabled>选择清晰度</option>
+                            <option v-for="option in analyze_result.video_quality_option" v-text="option.name"
+                                    :value="option.id"></option>
+                        </select>
+                        <button class="ml-2 btn btn-accent btn-sm"
+                                @click="download($event, episode.p, episode.cid, episode.title)">
+                            <span class="loading loading-spinner hidden"></span>
+                            下载
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            url: '',
+            cover_url: '',
+            analyze_result: '',
+            analyzing: false,
+            p_codes: [],
+            cids: [],
+            checkAll: false
+        }, 
+        watch:{
+            p_codes:function(){
+                if(app.p_codes.length==app.analyze_result.episodes.length){
+                    app.checkAll = true
+                }else{
+                    app.checkAll=false
+                }
+            }
+        },
+        methods: {
+            analyze: function () {
+                if (!app.url || app.analyzing) {
+                    return
+                }
+                app.analyzing = true
+                app.cover_url = ''
+                app.cover_url = '/bilibili/cover?url=' + app.url
+                axios.get('/bilibili/video/analyze?url=' + app.url)
+                    .then(response => {
+                        app.analyze_result = response.data
+                        app.analyzing = false
+                    })
+                    .catch(error => {
+                        app.$refs.child.visible=true
+                        app.$refs.child.message=error.response.data
+                        setTimeout(function(){app.$refs.child.visible=false},2000)
+                        app.analyzing = false
+                    });
+            },
+            download: function (event, p_code, cid, title) {
+                var loadingElement = event.currentTarget.getElementsByClassName('loading')[0]
+                if (!loadingElement.classList.contains('hidden')){
+                    return
+                }
+                var quality = event.currentTarget.parentElement.getElementsByTagName('select')[0].value
+                //如果要直接保存再磁盘把下面的注释打开
+                loadingElement.classList.remove('hidden')
+                axios.get('/bilibili/video/download?url=' + app.analyze_result.bv_code + '&p_codes=' + (p_code || app.p_codes)+'&quality=' + quality)
+                    .then(response => {
+                        loadingElement.classList.add('hidden')
+                    })
+                    .catch(error => {
+                       loadingElement.classList.add('hidden')
+                       app.$refs.child.visible=true
+                       app.$refs.child.message=error.response.data
+                       setTimeout(function(){app.$refs.child.visible=false},2000)
+                    });
+                //通过浏览器下载而不保存文件
+                /*if(cid){
+                  location.href = '/bilibili/video/stream?bvid=' + app.analyze_result.bv_code + '&cid=' + cid + '&quality=' + quality
+                + '&filename=' + title
+
+                }else{
+                   app.cids.forEach(function(eachCid) {
+                       var download = function(href, filename) {
+                           const a = document.createElement('a')
+                           a.download = filename
+                           a.href = href
+                           a.target = "_blank"
+                           document.body.appendChild(a)
+                           a.click()
+                           a.remove()
+                       }
+                       var downloadFile = function() {
+                           let url = '/bilibili/video/stream?bvid=' + app.analyze_result.bv_code + '&cid=' + eachCid.cid + '&quality=' + quality + '&filename=' + eachCid.title
+
+                           fetch(url, {
+                               headers: new Headers({
+                                   Origin: location.origin,
+                               }),
+                               mode: 'cors',
+                           }).then(res => res.blob()).then(blob => {
+                               const blobUrl = window.URL.createObjectURL(blob)
+                               download(blobUrl, eachCid.title)
+                               window.URL.revokeObjectURL(blobUrl)
+                           }
+                           )
+                       }
+                       downloadFile()
+                  })
+                }*/
+            },
+            clickCheckAll: function () {
+                if (!app.checkAll) {
+                    for (i in app.analyze_result.episodes) {
+                        app.p_codes.push(app.analyze_result.episodes[i].p)
+                    }
+                } else {
+                    app.p_codes = []
+                }
+            },
+            checkCid:function(event,p,cid,title){
+                if(event.target.checked){
+                   app.cids.push({'cid':cid,'title':title})
+                }else{
+                   app.cids = app.cids.filter(item => item.cid != cid)
+                }
+            }
+        }
+    })
+
+</script>
+
+</html>

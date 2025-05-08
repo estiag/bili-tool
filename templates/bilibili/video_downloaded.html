@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <title>已下载</title>
+    <script>
+        if (localStorage.getItem('theme')) {
+            document.getElementsByTagName('html')[0].dataset.theme = localStorage.getItem('theme')
+        }
+
+
+    </script>
+    <script src="{{ url_for('static', filename='js/vue.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/alert.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/tailwindcss.3.4.16.js') }}"></script>
+    <link href="{{ url_for('static', filename='css/daisyui@4.12.23.css') }}" rel="stylesheet" type="text/css"/>
+    <script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
+</head>
+<body>
+<div id="app" v-cloak>
+    <div class="max-w-3xl mx-auto px-16">
+        <nav class="navbar p-0 w-full">
+            <h3 class=" mt-0 text-xl font-semibold leading-normal">
+                <a href="/">首页</a>->已下载
+            </h3>
+        </nav>
+    </div>
+    <div class="max-w-6xl mx-auto pb-6 pt-10">
+        <div class="grid sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div v-for="video in videos" class="flex-col">
+                <div class="card card-compact bg-base-100 max-w-xl shadow-xl cursor-pointer"
+                     @click="showPreview(video.name)">
+                    <figure>
+                        <video class="w-full h-24" :src="getUrl(video.name)"/>
+                    </figure>
+                    <div class="card-body">
+                        <p v-text="video.name" :title="video.name"></p>
+                        <div class="card-actions justify-end hidden">
+                            <button class="btn btn-primary">下载</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <dialog id="video_preview" class="modal">
+        <div class="modal-box max-w-5xl">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" @click="closePreview">✕</button>
+            </form>
+            <h3 class="text-lg font-bold">视频预览</h3>
+            <video controls class="w-full" :src="previewUrl"/>
+        </div>
+    </dialog>
+</div>
+</body>
+
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            videos: [],
+            previewUrl: ''
+        },
+        methods:{
+            getUrl:function(filename){
+                return '/bilibili/video/download/stream?filename='+encodeURIComponent(filename)
+            },
+            showPreview:function(filename){
+                app.previewUrl = app.getUrl(filename)
+                video_preview.showModal()
+            },
+            closePreview:function(){
+                 app.previewUrl = ''
+            }
+        },
+        mounted: function(){
+            axios.get('/bilibili/video/download/list')
+                .then(response => {
+                    app.videos = response.data
+                })
+                .catch(error => {
+                    app.$refs.child.visible=true
+                    app.$refs.child.message=error.response.data
+                    setTimeout(function(){app.$refs.child.visible=false},2000)
+                });
+        }
+
+    })
+
+
+</script>
+
+</html>

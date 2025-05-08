@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>下载视频(api方式)</title>
+    <script>
+        if (localStorage.getItem('theme')) {
+            document.getElementsByTagName('html')[0].dataset.theme = localStorage.getItem('theme')
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/vue.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/alert.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/tailwindcss.3.4.16.js') }}"></script>
+    <link href="{{ url_for('static', filename='css/daisyui@4.12.23.css') }}" rel="stylesheet" type="text/css" />
+    <script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
+    <!--样式来自https://daisyui.com/-->
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <div class="max-w-3xl mx-auto px-16">
+          <nav class="navbar p-0 w-full">
+            <h3 class=" mt-0 text-xl font-semibold leading-normal">
+                <a href="/">首页</a>->下载视频(API方式)
+            </h3>
+          </nav>
+        </div>
+
+        <div class="max-w-3xl mx-auto pb-6 pt-12 text-center transition-all" :class="{'m-[20vh]':!data}">
+            <tips ref="child"></tips>
+            <div class="join w-full">
+                <input v-model="url" class="input input-bordered w-full join-item rounded-l-full"
+                    placeholder="bvid或url" @keyup.enter="analyze"/>
+                <button class="btn btn-accent join-item rounded-r-full" :class="{'btn-disabled':!url}" @click="analyze">
+                    <span class="loading loading-spinner" v-show="analyzing"></span>
+                    解析
+                </button>
+            </div>
+        </div>
+        <div class="max-w-3xl mx-auto pb-2 flex" v-if="data">
+            <div class="flex items-center pr-2" v-show="data.videos > 1">
+                <input type="checkbox" class="checkbox checkbox-accent" v-model="checkAll" @click="clickCheckAll" />
+            </div>
+            <div class="card card-side shadow-lg w-full">
+                <figure>
+                    <img class="max-h-32" :src="data.pic" v-show="data.pic" />
+                </figure>
+                <div class="card-body truncate">
+                    <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold" v-text="data.title"></p>
+                    <div class="card-actions justify-end">
+                        <select class="select select-info select-sm  max-w-xs" v-show="data.videos <= 1">
+                            <option disabled>选择清晰度</option>
+                            <option v-for="option in data.support_formats" v-text="option.new_description"
+                                :value="option.quality"></option>
+                        </select>
+                        <button @click="download($event)" class="ml-2 btn btn-accent btn-sm" :class="{'btn-disabled':data.videos > 1 && cids.length == 0}">
+                            <span class="loading loading-spinner hidden"></span>
+                            <span v-if="data.videos > 1">下载已选</span>
+                            <span v-else>下载</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div v-if="data.videos > 1">
+            <div v-for="episode in data.pages" class="max-w-3xl mx-auto py-1 flex">
+                <div class="flex items-center pr-2">
+                    <input type="checkbox" class="checkbox checkbox-accent sub-p-checkbox"
+                        v-model="cids" :value="episode.cid" @click="checkCid($event, episode.cid, episode.part)"/>
+                </div>
+                <div class="card card-side shadow-lg w-full">
+                    <figure>
+                        <img class="max-h-24" :src="episode.first_frame" v-show="data.pic" />
+                    </figure>
+                    <div class="card-body p-4 truncate">
+                        <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold"
+                            v-text="'P'+ episode.page +': '+ episode.part"></p>
+                        <div class="card-actions justify-end">
+                            <select class=" select select-info select-sm  max-w-xs">
+                                <option disabled>选择清晰度</option>
+                                <option v-for="option in episode.support_formats" v-text="option.new_description"
+                                    :value="option.quality"></option>
+                            </select>
+                            <button class="ml-2 btn btn-accent btn-sm" @click="download($event, episode.cid, episode.part)">
+                                <span class="loading loading-spinner hidden"></span>
+                                下载
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            data: '',
+            url: '',
+            cover_url: '',
+            analyze_result: '',
+            analyzing: false,
+            p_codes: [],
+            cids: [],
+            checkAll: false
+        }, 
+        watch:{
+            cids:function(){
+                if(app.cids.length==app.data.pages.length){
+                    app.checkAll = true
+                }else{
+                    app.checkAll=false
+                }
+            }
+        },
+        methods: {
+            analyze: function () {
+                if (!app.url || app.analyzing) {
+                    return
+                }
+                app.analyzing = true
+
+                axios.get('/bilibili/api/video/analyze?url=' + app.url)
+                    .then(response => {
+                        app.data = response.data.data
+                        app.data.pic = '/bilibili/api/cover?url=' +  app.data.pic
+                        app.data.pages.forEach(function(eachPart){
+                            eachPart.first_frame = '/bilibili/api/cover?url=' + eachPart.first_frame
+                        })
+                        app.analyzing = false
+                    })
+                    .catch(error => {
+                        app.$refs.child.visible=true
+                        app.$refs.child.message=error.response.data
+                        setTimeout(function(){app.$refs.child.visible=false},2000)
+                        app.analyzing = false
+                    });
+            },
+            download: function (event, cid) {
+                var loadingElement = event.currentTarget.getElementsByClassName('loading')[0]
+                if (!loadingElement.classList.contains('hidden')){
+                    return
+                }
+                var quality = event.currentTarget.parentElement.getElementsByTagName('select')[0].value
+
+                loadingElement.classList.remove('hidden')
+                if(app.data.videos <= 1){
+                    cid = app.data.cid
+                }
+                axios.get('/bilibili/api/download/video?bvid=' + app.data.bvid + '&cids=' + (cid || app.cids)+'&quality=' + quality)
+                    .then(response => {
+                        loadingElement.classList.add('hidden')
+                    })
+                    .catch(error => {
+                        app.$refs.child.visible=true
+                        app.$refs.child.message=error.response.data
+                        setTimeout(function(){app.$refs.child.visible=false},2000)
+                       app.$refs.child.message=error.response.data
+                    });
+            },
+            clickCheckAll: function () {
+                if (!app.checkAll) {
+                    app.data.pages.forEach(function(eachPart){
+                      app.cids.push(eachPart.cid)
+                    })
+                } else {
+                    app.cids = []
+                }
+            },
+            checkCid:function(event,cid,title){
+                if(event.target.checked){
+                   app.cids.push(cid)
+                }else{
+                   app.cids = app.cids.filter(item => item != cid)
+                }
+            }
+        }
+    })
+</script>
+
+</html>
