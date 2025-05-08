@@ -2,10 +2,10 @@
 
 
 a = Analysis(
-    ['server.py'],
+    ['bilitool.py'],
     pathex=[],
     binaries=[],
-    datas=[('config/*.conf', 'config'), ('static', 'static'), ('templates', 'templates'), ('download', 'download'), ('log', 'log')],
+    datas=[('config/*.conf', 'config'), ('static', 'static'), ('templates', 'templates'), ('download', 'download')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -21,7 +21,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='server',
+    name='bilitool',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -40,5 +40,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='server',
+    name='bilitool',
 )
