@@ -1,4 +1,5 @@
 import time
+import types
 import urllib.parse
 
 import bilibili.bilibili_downloader as bili_down
@@ -96,12 +97,33 @@ class TestBilibili(unittest.TestCase):
             .method('post').send_and_print()
 
     def test_yield(self):
-        def loop():
-            for i in range(10):
-                yield i
+        def first():
+            yield 1
+            yield 2
 
-        for item in loop():
-            print(item)
+        for result in first():
+            print(result)
+
+    def test_yield_nest(self):
+        def first_step():
+            yield 1
+            yield 11
+
+        def second_step():
+            yield 2
+            yield 22
+
+        def call():
+            yield first_step()
+            yield second_step()
+
+        for result in call():
+            if isinstance(result, types.GeneratorType):
+                for item in result:
+                    print(item)
+            else:
+                print(result)
 
     def test_download_video_web(self):
-        bili_down.download_video_for_web('BV1tkVpzFE1k', p_code=1, quality=16)
+        for result in bili_down.download_video_for_web('BV1tkVpzFE1k', p_code=1, quality=16):
+            print('----====', result)

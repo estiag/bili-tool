@@ -1,6 +1,9 @@
 import logging
 import os.path
 
+from bilibili.event_message import EventMessage
+from enums.message_type import EventType
+
 logger = logging.getLogger('fileAndConsole')
 
 # http setting
@@ -38,3 +41,19 @@ def download_with_progress(resp, path):
                 f.write(chunk)
 
     print(f'\r')
+
+
+def download_with_progress_for_web(resp, path, key):
+    path_name = os.path.dirname(path)
+    os.makedirs(path_name, exist_ok=True)
+    downloaded = 0
+    total_size = int(resp.headers.get('content-length', 0))
+    logger.info(f'总大小: {format_file_size(total_size)}')
+    with open(path, 'wb') as f:
+        for chunk in resp.iter_content(chunk_size=chunk_size):
+            downloaded = downloaded + len(chunk)
+            percent = downloaded / total_size * 100
+            if chunk:
+                f.write(chunk)
+                yield EventMessage(EventType.PERCENTAGE, percent)
+    yield EventMessage(EventType.OK, {key: path})

@@ -5,11 +5,13 @@ import subprocess
 
 from bs4 import BeautifulSoup
 from api.api import Api
+from bilibili.event_message import EventMessage
 from config.logger_config import get_logger
 from urllib.parse import urlunparse, urlencode
 import utils.traffic_utils as tfu
 import utils.ffmpeg_util as ffmpeg_util
 import bilibili.bilibili_common as bilibili_common
+from enums.message_type import EventType
 from utils.conf_util import get_bilibili_conf
 import tempfile
 import bilibili.wbi as wbi
@@ -142,7 +144,7 @@ def save_video(resp, api_result):
         title = bilibili_common.reorganize_title(api_result.get_callback_result().get('title'))
         bv_code = api_result.get_callback_result().get('bv_code')
         # save file as binary
-        video_path = f'{tempfile.gettempdir()}/{title}.mp4'
+        video_path = f'{tempfile.gettempdir()}/{bv_code}_{title}.mp4'
         tfu.download_with_progress(resp, video_path)
         logger.info(f'视频[{bv_code}_{title}]下载成功')
         return {'video_path': video_path}
@@ -161,12 +163,36 @@ def save_audio(resp, api_result):
         title = bilibili_common.reorganize_title(api_result.get_callback_result().get('title'))
         bv_code = api_result.get_callback_result().get('bv_code')
         # save file as binary
-        audio_path = f'{tempfile.gettempdir()}/{title}.mp3'
+        audio_path = f'{tempfile.gettempdir()}/{bv_code}_{title}.mp3'
         tfu.download_with_progress(resp, audio_path)
         logger.info(f'音频[{bv_code}_{title}]下载成功')
         return {'audio_path': audio_path}
     else:
         logger.error(f'下载失败, status code is {resp.status_code}')
+
+
+def save_audio_for_web(resp, api_result):
+    if 200 <= resp.status_code < 300:
+        title = bilibili_common.reorganize_title(api_result.get_callback_result().get('title'))
+        bv_code = api_result.get_callback_result().get('bv_code')
+        # save file as binary
+        audio_path = f'{tempfile.gettempdir()}/{bv_code}_{title}.mp3'
+        return tfu.download_with_progress_for_web(resp, audio_path, 'audio_path')
+    else:
+        logger.error(f'下载失败, status code is {resp.status_code}')
+        return EventMessage(EventType.FAILED, f'下载失败, status code is {resp.status_code}')
+
+
+def save_video_for_web(resp, api_result):
+    if 200 <= resp.status_code < 300:
+        title = bilibili_common.reorganize_title(api_result.get_callback_result().get('title'))
+        bv_code = api_result.get_callback_result().get('bv_code')
+        # save file as binary
+        video_path = f'{tempfile.gettempdir()}/{bv_code}_{title}.mp4'
+        return tfu.download_with_progress_for_web(resp, video_path, 'video_path')
+    else:
+        logger.error(f'下载失败, status code is {resp.status_code}')
+        return EventMessage(EventType.FAILED, f'下载失败, status code is {resp.status_code}')
 
 
 def combine_video(path_result):
@@ -250,6 +276,27 @@ def download_and_combine(video_detail, quality):
     combine_video(video_save_result)
 
 
+def download_and_combine_for_web(video_detail, quality):
+    video_result = Api(get_video_url(video_detail, quality)).headers(bilibili_common.get_headers()).send()
+    video_save_result = None
+    audio_save_result = None
+    for result in save_video_for_web(video_result.get_resp(), video_detail):
+        if result.message_type == EventType.PERCENTAGE:
+            yield result
+        elif result.message_type == EventType.OK:
+            video_save_result = result.message
+    audio_result = Api(get_audio_url(video_detail)).headers(bilibili_common.get_headers()).send()
+    for result in save_audio_for_web(audio_result.get_resp(), video_detail):
+        if result.message_type == EventType.PERCENTAGE:
+            yield result
+        elif result.message_type == EventType.OK:
+            audio_save_result = result.message
+    video_save_result.update(audio_save_result)
+    yield EventMessage(EventType.COMBINE_START, f'开始合并')
+    combine_video(video_save_result)
+    yield EventMessage(EventType.COMBINE_SUCCESS, f'合并完成')
+
+
 def download_video(url, p_codes=None, quality=None):
     """
     下载指定url或bv code的视频或视频合集
@@ -295,9 +342,9 @@ def download_video_for_web(url, p_code, quality=None):
         logger.info(f'准备下载 {episode_for_download.get("title")}')
         sub_video_detail = Api(bilibili_common.format_url(url, p=episode_for_download.get('p'))).headers(
             bilibili_common.get_headers()).callback(get_detail_callback).send()
-        download_and_combine(sub_video_detail, quality)
+        return download_and_combine_for_web(sub_video_detail, quality)
     else:
-        download_and_combine(video_detail, quality)
+        return download_and_combine_for_web(video_detail, quality)
 
 
 def download_video_stream(bvid=None, avid=None, cid=None, qn=None, filename=None):

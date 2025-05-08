@@ -117,7 +117,7 @@ def download_bilibili_video():
     url_or_bvcode = request.args.get('url')
     p_code = request.args.get('p_code')
     quality = request.args.get('quality')
-    bili_down.download_video_for_web(url_or_bvcode, p_code=p_code, quality=quality)
+    bili_down.download_video(url_or_bvcode, p_codes=p_code, quality=quality)
     return 'success'
 
 
