@@ -110,6 +110,7 @@ def analyze_bilibili_video():
         detail_json = bili_down.analyze_video(url_or_bvcode)
         if not detail_json:
             return '无效的链接或BV码', 400
+        return detail_json
     except:
         return '无效的链接或BV码', 400
 
