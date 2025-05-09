@@ -6,6 +6,8 @@ import bilibili.bilibili_downloader as bili_down
 import bilibili.bilibili_api_downloader as bili_api_down
 import unittest
 
+from bilibili.event_message import EventMessage
+from enums.message_type import EventType
 from utils import conf_util
 from utils.json_util import format_json
 import utils.validate_util as validate_util
@@ -16,6 +18,11 @@ from api.api import Api
 
 
 class TestBilibili(unittest.TestCase):
+    """
+        BV1XH4y1T7WC 蘑 菇 小 人 偶
+        BV1Nu4y1T771 大肉嘎合集
+        BV1tkVpzFE1k GTA 6
+    """
     # url的bv号后面要加/ 否则解析不到高清视频
     def test_init_ffmpeg(self):
         check_ffmpeg()
@@ -105,25 +112,49 @@ class TestBilibili(unittest.TestCase):
             print(result)
 
     def test_yield_nest(self):
-        def first_step():
-            yield 1
-            yield 11
+        def save_video_for_web():
+            yield EventMessage(EventType.STRING, '正在下载视频')
+            yield download_with_progress_for_web()
 
-        def second_step():
-            yield 2
-            yield 22
+        def save_audio_for_web():
+            yield EventMessage(EventType.STRING, '正在下载音频')
+            yield download_with_progress_for_web()
 
-        def call():
-            yield first_step()
-            yield second_step()
+        def combine_video():
+            yield EventMessage(EventType.STRING, '开始合并')
+            yield EventMessage(EventType.STRING, '合并完成')
 
-        for result in call():
-            if isinstance(result, types.GeneratorType):
-                for item in result:
-                    print(item)
-            else:
-                print(result)
+        def download_with_progress_for_web():
+            yield EventMessage(EventType.PERCENTAGE, '10%')
+            yield EventMessage(EventType.PERCENTAGE, '50%')
+            yield EventMessage(EventType.PERCENTAGE, '100%')
+            yield EventMessage(EventType.OK, {'key': 'path'})
+
+        def download_and_combine_for_web():
+            for r in save_video_for_web():
+                yield r
+            for r in save_audio_for_web():
+                yield r
+            yield combine_video()
+
+        def download_video_for_web():
+            return download_and_combine_for_web()
+
+        def receive_message(event_action):
+            for result in event_action:
+                if isinstance(result, types.GeneratorType):
+                    receive_message(result)
+                else:
+                    print('===', result)
+
+        receive_message(download_video_for_web())
 
     def test_download_video_web(self):
-        for result in bili_down.download_video_for_web('BV1tkVpzFE1k', p_code=1, quality=16):
-            print('----====', result)
+        def receive_message(event_action):
+            for result in event_action:
+                if isinstance(result, types.GeneratorType):
+                    receive_message(result)
+                else:
+                    print('===', result)
+
+        receive_message(bili_down.download_video_for_web('BV1tkVpzFE1k', p_codes=1, quality=16))

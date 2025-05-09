@@ -1,9 +1,10 @@
 import io
+import types
 
 import webview
 
 from config.logger_config import get_logger
-from flask import Flask, render_template, request, send_file, make_response, send_from_directory
+from flask import Flask, render_template, request, send_file, make_response, send_from_directory, Response
 from utils import conf_util
 
 # logger需要再引入自定义模块之前加载，否则会先加载自定义模块中的logger
@@ -115,10 +116,33 @@ def analyze_bilibili_video():
 @app.route("/bilibili/video/download", methods=['GET'])
 def download_bilibili_video():
     url_or_bvcode = request.args.get('url')
-    p_code = request.args.get('p_code')
+    p_codes = request.args.get('p_codes')
     quality = request.args.get('quality')
-    bili_down.download_video(url_or_bvcode, p_codes=p_code, quality=quality)
+    bili_down.download_video(url_or_bvcode, p_codes=p_codes, quality=quality)
     return 'success'
+
+
+@app.route("/bilibili/video/download/stream", methods=['GET'])
+def download_bilibili_video_stream():
+    """
+    Event stream的下载方式，只接收一个pcode，使前端具有展示进度条的能力
+    """
+    url_or_bvcode = request.args.get('url')
+    p_codes = request.args.get('p_codes')
+    quality = request.args.get('quality')
+
+    def receive_message(event_action):
+        for result in event_action:
+            if isinstance(result, types.GeneratorType):
+                receive_message(result)
+            else:
+                yield f'data: {result}\n\n'
+        yield 'event: finish\ndata: finish.\n\n'
+
+    return Response(
+        receive_message(bili_down.download_video_for_web(url_or_bvcode, p_codes=p_codes, quality=quality)),
+        mimetype='text/event-stream'
+    )
 
 
 @app.route("/bilibili/video/stream", methods=['GET'])
@@ -270,7 +294,5 @@ def start_webview():
 
 
 if __name__ == "__main__":
-    # 仅启动flask
-    start_server()
     # 启动webview
-    # start_webview()
+    start_webview()

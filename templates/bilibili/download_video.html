@@ -39,24 +39,25 @@
             </button>
         </div>
     </div>
-    <div class="max-w-3xl mx-auto pb-2 flex" v-if="analyze_result">
+    <div class="max-w-3xl mx-auto pb-2 flex" v-if="analyze_result && analyze_result.bv_code">
         <div class="flex items-center pr-2" v-show="analyze_result.is_list">
             <input type="checkbox" class="checkbox checkbox-accent" v-model="checkAll" @click="clickCheckAll"/>
         </div>
-        <div class="card card-side shadow-lg w-full">
+        <div class="card card-side overflow-hidden shadow-lg w-full">
             <figure>
                 <img class="max-h-32" :src="cover_url" v-show="cover_url"/>
             </figure>
             <div class="card-body truncate">
                 <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold" v-text="analyze_result.title"></p>
                 <div class="card-actions justify-end">
+					<p class="ml-2 text-base text-ellipsis overflow-hidden font-bold" v-text="download_message"></p>
                     <select class=" select select-info select-sm  max-w-xs"
                             :value="analyze_result.available_best_quality">
                         <option disabled>选择清晰度</option>
                         <option v-for="option in analyze_result.video_quality_option" v-text="option.name"
                                 :value="option.id"></option>
                     </select>
-                    <button @click="download($event)" class="ml-2 btn btn-accent btn-sm"
+                    <button @click="download_event_stream($event)" class="ml-2 btn btn-accent btn-sm"
                             :class="{'btn-disabled':analyze_result.is_list && p_codes.length == 0}">
                         <span class="loading loading-spinner hidden"></span>
                         <span v-if="analyze_result.is_list">下载已选</span>
@@ -64,6 +65,7 @@
                     </button>
                 </div>
             </div>
+			<progress class="progress absolute progress-accent w-full" :value="progress" max="100" style="top: 94%;" v-show="downloading"></progress>
         </div>
     </div>
     <div v-if="analyze_result.is_list">
@@ -76,7 +78,9 @@
             <div class="card shadow-inner w-full">
                 <div class="card-body p-4 truncate">
                     <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold"
-                       v-text="'P'+ episode.p +': '+ episode.title"></p>
+                       v-text="'P'+ episode.p"></p>
+					<p class="ml-2 text-base text-ellipsis overflow-hidden font-bold"
+                       v-text="episode.title"></p>
                     <div class="card-actions justify-end">
                         <select class=" select select-info select-sm  max-w-xs"
                                 :value="analyze_result.available_best_quality">
@@ -85,7 +89,7 @@
                                     :value="option.id"></option>
                         </select>
                         <button class="ml-2 btn btn-accent btn-sm"
-                                @click="download($event, episode.p, episode.cid, episode.title)">
+                                @click="download_event_stream($event, episode.p, episode.cid, episode.title)">
                             <span class="loading loading-spinner hidden"></span>
                             下载
                         </button>
@@ -103,11 +107,16 @@
         data: {
             url: '',
             cover_url: '',
-            analyze_result: '',
+            analyze_result: {
+				 
+			},
             analyzing: false,
             p_codes: [],
             cids: [],
-            checkAll: false
+            checkAll: false,
+			downloading:false,
+			progress:0,
+			download_message:''
         }, 
         watch:{
             p_codes:function(){
@@ -124,10 +133,10 @@
                     return
                 }
                 app.analyzing = true
-                app.cover_url = ''
-                app.cover_url = '/bilibili/cover?url=' + app.url
                 axios.get('/bilibili/video/analyze?url=' + app.url)
                     .then(response => {
+                        app.cover_url = ''
+                        app.cover_url = '/bilibili/cover?url=' + app.url
                         app.analyze_result = response.data
                         app.analyzing = false
                     })
@@ -138,15 +147,67 @@
                         app.analyzing = false
                     });
             },
+            download_event_stream:function(event, p_code, cid, title){
+                var loadingElement = event.currentTarget.getElementsByClassName('loading')[0]
+                if (!loadingElement.classList.contains('hidden')){
+                    return
+                }
+                var quality = event.currentTarget.parentElement.getElementsByTagName('select')[0].value
+
+                loadingElement.classList.remove('hidden')
+                //直接保存到磁盘(有进度条，每个请求只能下载一个视频)
+                var p_codes_down = []
+				if(p_code){
+					p_codes_down = String(p_code).split(',')
+				}
+				else{
+					p_codes_down = app.p_codes
+				}
+				if (p_codes_down.length<1){
+					p_codes_down.push(1)
+				}
+				if(!app.is_list){
+					app.downloading = true
+				}
+				for (var i=0;i<p_codes_down.length;i++){
+					const eventSource = new EventSource('/bilibili/video/download/stream?url=' + app.analyze_result.bv_code + '&p_codes=' + p_codes_down[i] +'&quality=' + quality);
+
+					eventSource.onmessage = (e) => {
+						//console.log('收到事件:', e.data);
+						if(e.data.split(',')[0] == 1){
+							app.download_message = e.data.split(',')[1]
+						}else if(e.data.split(',')[0] == 0){
+							app.progress = e.data.split(',')[1]
+						}
+					};
+
+					eventSource.onerror = () => {
+						console.error('连接中断');
+						eventSource.close();
+						loadingElement.classList.add('hidden')
+						 
+					};
+					eventSource.addEventListener('finish',
+						function(event) {
+							console.log('close');
+							eventSource.close()
+							loadingElement.classList.add('hidden')
+					});
+				 
+				}
+               
+            },
             download: function (event, p_code, cid, title) {
                 var loadingElement = event.currentTarget.getElementsByClassName('loading')[0]
                 if (!loadingElement.classList.contains('hidden')){
                     return
                 }
                 var quality = event.currentTarget.parentElement.getElementsByTagName('select')[0].value
-                //如果要直接保存再磁盘把下面的注释打开
+
                 loadingElement.classList.remove('hidden')
-                axios.get('/bilibili/video/download?url=' + app.analyze_result.bv_code + '&p_codes=' + (p_code || app.p_codes)+'&quality=' + quality)
+                //直接保存到磁盘(无进度条，可下载多个视频)
+                var p_codes_down = p_code || app.p_codes
+                axios.get('/bilibili/video/download?url=' + app.analyze_result.bv_code + '&p_codes=' + p_codes_down +'&quality=' + quality)
                     .then(response => {
                         loadingElement.classList.add('hidden')
                     })
@@ -156,11 +217,19 @@
                        app.$refs.child.message=error.response.data
                        setTimeout(function(){app.$refs.child.visible=false},2000)
                     });
+            },
+            download_browser:function(event, p_code, cid, title){
+                var loadingElement = event.currentTarget.getElementsByClassName('loading')[0]
+                if (!loadingElement.classList.contains('hidden')){
+                    return
+                }
+                var quality = event.currentTarget.parentElement.getElementsByTagName('select')[0].value
+
+                loadingElement.classList.remove('hidden')
                 //通过浏览器下载而不保存文件
-                /*if(cid){
+                if(cid){
                   location.href = '/bilibili/video/stream?bvid=' + app.analyze_result.bv_code + '&cid=' + cid + '&quality=' + quality
                 + '&filename=' + title
-
                 }else{
                    app.cids.forEach(function(eachCid) {
                        var download = function(href, filename) {
@@ -189,7 +258,7 @@
                        }
                        downloadFile()
                   })
-                }*/
+                }
             },
             clickCheckAll: function () {
                 if (!app.checkAll) {

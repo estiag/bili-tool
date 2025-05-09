@@ -32,6 +32,8 @@ def get_video_detail(bv_code_or_url):
 
 
 def get_detail_callback(resp, api_result):
+    if not resp:
+        return None
     bv_code = bilibili_common.get_bv_code(resp.url)
     soup = BeautifulSoup(resp.text, features="html.parser")
     title = soup.find('h1', class_='video-title').text
@@ -205,7 +207,7 @@ def combine_video(path_result):
                     path_result.get('audio_path'),
                     '-c', 'copy', '-y',
                     final_video_path
-                    ])
+                    ], creationflags=subprocess.CREATE_NO_WINDOW)
     os.remove(path_result.get('audio_path'))
     os.remove(path_result.get('video_path'))
     logger.info(f'{mp4_filename} Download success, you can find it {get_bilibili_conf("bilibili_video_path")}')
@@ -280,11 +282,13 @@ def download_and_combine_for_web(video_detail, quality):
     video_result = Api(get_video_url(video_detail, quality)).headers(bilibili_common.get_headers()).send()
     video_save_result = None
     audio_save_result = None
+    yield EventMessage(EventType.STRING, '正在下载视频')
     for result in save_video_for_web(video_result.get_resp(), video_detail):
         if result.message_type == EventType.PERCENTAGE:
             yield result
         elif result.message_type == EventType.OK:
             video_save_result = result.message
+    yield EventMessage(EventType.STRING, '正在下载音频')
     audio_result = Api(get_audio_url(video_detail)).headers(bilibili_common.get_headers()).send()
     for result in save_audio_for_web(audio_result.get_resp(), video_detail):
         if result.message_type == EventType.PERCENTAGE:
@@ -292,9 +296,9 @@ def download_and_combine_for_web(video_detail, quality):
         elif result.message_type == EventType.OK:
             audio_save_result = result.message
     video_save_result.update(audio_save_result)
-    yield EventMessage(EventType.COMBINE_START, f'开始合并')
+    yield EventMessage(EventType.STRING, f'开始合并')
     combine_video(video_save_result)
-    yield EventMessage(EventType.COMBINE_SUCCESS, f'合并完成')
+    yield EventMessage(EventType.STRING, f'下载完成')
 
 
 def download_video(url, p_codes=None, quality=None):
@@ -304,9 +308,16 @@ def download_video(url, p_codes=None, quality=None):
     @:param quality 视频清晰度id
     对外提供
     """
-    p_codes = str(p_codes)
+    p_codes = p_codes
+    if p_codes and not isinstance(p_codes, list):
+        if ',' in p_codes:
+            p_codes = p_codes.split(',')
+        else:
+            p_codes = [p_codes]
     video_detail = get_detail(url)
     video_detail_json = video_detail.get_callback_result()
+    if not video_detail_json:
+        raise Exception('无法解析')
     if video_detail_json.get('is_list'):
         episodes = video_detail_json.get('episodes')
         logger.info("解析为视频合集:")
@@ -314,6 +325,7 @@ def download_video(url, p_codes=None, quality=None):
             logger.info(f'P:{video.get("p")}, 标题:{video.get("title")}')
         if not p_codes:
             p_codes = input("请输入视频P编号下载(多个用逗号分隔,若下载全部直接回车):")
+            p_codes = p_codes.split(',')
         if not p_codes or p_codes == 'all':
             episodes_for_download = episodes
         else:
@@ -327,22 +339,31 @@ def download_video(url, p_codes=None, quality=None):
         download_and_combine(video_detail, quality)
 
 
-def download_video_for_web(url, p_code, quality=None):
+def download_video_for_web(url, p_codes, quality=None):
     """
     下载指定url或bv code的视频或视频合集
     @:param quality 视频清晰度id
     对外提供
     """
-    p_code = str(p_code)
+    p_codes = p_codes
+    if not isinstance(p_codes, list):
+        if isinstance(p_codes,int):
+            p_codes = str(p_codes)
+        if ',' in p_codes:
+            p_codes = p_codes.split(',')
+        else:
+            p_codes = [p_codes]
+    p_codes = list(map(lambda x: str(x), p_codes))
     video_detail = get_detail(url)
     video_detail_json = video_detail.get_callback_result()
     if video_detail_json.get('is_list'):
         episodes = video_detail_json.get('episodes')
-        episode_for_download = next(filter(lambda x: str(x.get('p')) == p_code, episodes))
-        logger.info(f'准备下载 {episode_for_download.get("title")}')
-        sub_video_detail = Api(bilibili_common.format_url(url, p=episode_for_download.get('p'))).headers(
-            bilibili_common.get_headers()).callback(get_detail_callback).send()
-        return download_and_combine_for_web(sub_video_detail, quality)
+        episodes_for_download = list(filter(lambda x: str(x.get('p')) in p_codes, episodes))
+        for episode in episodes_for_download:
+            logger.info(f'准备下载 {episode.get("title")}')
+            sub_video_detail = Api(bilibili_common.format_url(url, p=episode.get('p'))).headers(
+                bilibili_common.get_headers()).callback(get_detail_callback).send()
+            return download_and_combine_for_web(sub_video_detail, quality)
     else:
         return download_and_combine_for_web(video_detail, quality)
 
