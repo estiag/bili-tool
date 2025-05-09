@@ -254,13 +254,13 @@ def get_bilibili_img_download_list():
     return imgs
 
 
-@app.route("/bilibili/video/download/stream", methods=['GET'])
+@app.route("/bilibili/video/download/preview", methods=['GET'])
 def get_bilibili_video_download_stream():
     filename = request.args.get('filename')
     return bili_api_down.get_bilibili_video_download_stream(filename)
 
 
-@app.route("/bilibili/img/download/stream", methods=['GET'])
+@app.route("/bilibili/img/download/preview", methods=['GET'])
 def get_bilibili_img_download_stream():
     filename = request.args.get('filename')
     return bili_api_down.get_bilibili_img_download_stream(filename)

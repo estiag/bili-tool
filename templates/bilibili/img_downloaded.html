@@ -64,7 +64,7 @@
         },
         methods:{
             getUrl:function(filename){
-                return '/bilibili/img/download/stream?filename='+encodeURIComponent(filename)
+                return '/bilibili/img/download/preview?filename='+encodeURIComponent(filename)
             },
             showPreview:function(filename){
                 app.previewUrl = app.getUrl(filename)
