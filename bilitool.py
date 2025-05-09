@@ -108,7 +108,8 @@ def analyze_bilibili_video():
     url_or_bvcode = request.args.get('url')
     try:
         detail_json = bili_down.analyze_video(url_or_bvcode)
-        return detail_json
+        if not detail_json:
+            return '无效的链接或BV码', 400
     except:
         return '无效的链接或BV码', 400
 
