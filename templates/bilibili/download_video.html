@@ -9,6 +9,8 @@
             document.getElementsByTagName('html')[0].dataset.theme = localStorage.getItem('theme')
         }
 
+
+
     </script>
     <script src="{{ url_for('static', filename='js/vue.js') }}"></script>
     <script src="{{ url_for('static', filename='js/alert.js') }}"></script>
@@ -50,7 +52,7 @@
             <div class="card-body truncate">
                 <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold" v-text="analyze_result.title"></p>
                 <div class="card-actions justify-end">
-					<p class="ml-2 text-base text-ellipsis overflow-hidden font-bold" v-text="download_message"></p>
+                    <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold" v-text="download_message"></p>
                     <select class=" select select-info select-sm  max-w-xs"
                             :value="analyze_result.available_best_quality">
                         <option disabled>选择清晰度</option>
@@ -65,7 +67,8 @@
                     </button>
                 </div>
             </div>
-			<progress class="progress absolute progress-accent w-full" :value="progress" max="100" style="top: 94%;" v-show="downloading"></progress>
+            <progress class="progress absolute progress-accent w-full" :value="progress" max="100" style="top: 94%;"
+                      v-show="downloading"></progress>
         </div>
     </div>
     <div v-if="analyze_result.is_list">
@@ -75,13 +78,14 @@
                        v-model="p_codes" :value="episode.p"
                        @click="checkCid($event, episode.p, episode.cid, episode.title)"/>
             </div>
-            <div class="card shadow-inner w-full">
+            <div class="card overflow-hidden shadow-inner w-full">
                 <div class="card-body p-4 truncate">
                     <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold"
                        v-text="'P'+ episode.p"></p>
-					<p class="ml-2 text-base text-ellipsis overflow-hidden font-bold"
+                    <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold"
                        v-text="episode.title"></p>
                     <div class="card-actions justify-end">
+						<p class="ml-2 text-base text-ellipsis overflow-hidden font-bold" v-text="episode.download_message"></p>
                         <select class=" select select-info select-sm  max-w-xs"
                                 :value="analyze_result.available_best_quality">
                             <option disabled>选择清晰度</option>
@@ -95,6 +99,8 @@
                         </button>
                     </div>
                 </div>
+                <progress class="progress absolute progress-accent w-full" :value="episode.progress" max="100" style="top: 94%;"
+                          v-show="episode.downloading"></progress>
             </div>
         </div>
 
@@ -170,12 +176,25 @@
 					app.downloading = true
 				}
 				for (var i=0;i<p_codes_down.length;i++){
+					var episode_index = 0
+					var target_episode
+					for(var i =0;i<app.analyze_result.episodes.length;i++){
+						if(app.analyze_result.episodes[i].p == p_codes_down[i]){
+							 target_episode = app.analyze_result.episodes[i]
+							 episode_index = i
+						}
+					}
+				
+					target_episode.downloading = true
+					app.$set(app.analyze_result.episodes, episode_index ,target_episode)
 					const eventSource = new EventSource('/bilibili/video/download/stream?url=' + app.analyze_result.bv_code + '&p_codes=' + p_codes_down[i] +'&quality=' + quality);
 
 					eventSource.onmessage = (e) => {
 						//console.log('收到事件:', e.data);
 						if(e.data.split(',')[0] == 1){
 							app.download_message = e.data.split(',')[1]
+							target_episode.download_message = e.data.split(',')[1]
+							app.$set(app.analyze_result.episodes, episode_index ,target_episode)
 						}else if(e.data.split(',')[0] == 0){
 							app.progress = e.data.split(',')[1]
 						}
@@ -278,6 +297,8 @@
             }
         }
     })
+
+
 
 </script>
 
