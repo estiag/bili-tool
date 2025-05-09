@@ -23,6 +23,7 @@ class TestBilibili(unittest.TestCase):
         BV1Nu4y1T771 大肉嘎合集
         BV1tkVpzFE1k GTA 6
     """
+
     # url的bv号后面要加/ 否则解析不到高清视频
     def test_init_ffmpeg(self):
         check_ffmpeg()
@@ -111,43 +112,49 @@ class TestBilibili(unittest.TestCase):
         for result in first():
             print(result)
 
+    def save_video_for_web(self):
+        yield EventMessage(EventType.STRING, '正在下载视频')
+        yield self.download_with_progress_for_web()
+
+    def save_audio_for_web(self):
+        yield EventMessage(EventType.STRING, '正在下载音频')
+        yield self.download_with_progress_for_web()
+
+    def combine_video(self):
+        yield EventMessage(EventType.STRING, '开始合并')
+        yield EventMessage(EventType.STRING, '合并完成')
+
+    def download_with_progress_for_web(self):
+        for i in range(10):
+            time.sleep(1)
+            yield EventMessage(EventType.PERCENTAGE, i * 10)
+        yield EventMessage(EventType.OK, {'key': 'path'})
+
+    def download_and_combine_for_web(self):
+        for r in self.save_video_for_web():
+            yield r
+        for r in self.save_audio_for_web():
+            yield r
+        for r in self.combine_video():
+            yield r
+
+    def download_video_for_web(self):
+        return self.download_and_combine_for_web()
+
     def test_yield_nest(self):
-        def save_video_for_web():
-            yield EventMessage(EventType.STRING, '正在下载视频')
-            yield download_with_progress_for_web()
-
-        def save_audio_for_web():
-            yield EventMessage(EventType.STRING, '正在下载音频')
-            yield download_with_progress_for_web()
-
-        def combine_video():
-            yield EventMessage(EventType.STRING, '开始合并')
-            yield EventMessage(EventType.STRING, '合并完成')
-
-        def download_with_progress_for_web():
-            yield EventMessage(EventType.PERCENTAGE, '10%')
-            yield EventMessage(EventType.PERCENTAGE, '50%')
-            yield EventMessage(EventType.PERCENTAGE, '100%')
-            yield EventMessage(EventType.OK, {'key': 'path'})
-
-        def download_and_combine_for_web():
-            for r in save_video_for_web():
-                yield r
-            for r in save_audio_for_web():
-                yield r
-            yield combine_video()
-
-        def download_video_for_web():
-            return download_and_combine_for_web()
-
         def receive_message(event_action):
             for result in event_action:
                 if isinstance(result, types.GeneratorType):
-                    receive_message(result)
+                    for result_2 in result:
+                        if isinstance(result_2, types.GeneratorType):
+                            for result_3 in result_2:
+                                print('-', result_3)
+                        else:
+                            print('--', result_2)
                 else:
                     print('===', result)
 
-        receive_message(download_video_for_web())
+        receive_message(self.download_video_for_web())
 
     def test_download_video_web(self):
         def receive_message(event_action):

@@ -49,11 +49,14 @@ def download_with_progress_for_web(resp, path, key):
     downloaded = 0
     total_size = int(resp.headers.get('content-length', 0))
     logger.info(f'总大小: {format_file_size(total_size)}')
+    temp_percent = 0
     with open(path, 'wb') as f:
         for chunk in resp.iter_content(chunk_size=chunk_size):
             downloaded = downloaded + len(chunk)
             percent = downloaded / total_size * 100
             if chunk:
                 f.write(chunk)
-                yield EventMessage(EventType.PERCENTAGE, percent)
+                if int(percent / 10) > temp_percent:
+                    temp_percent = int(percent / 10)
+                    yield EventMessage(EventType.PERCENTAGE, percent)
     yield EventMessage(EventType.OK, {key: path})

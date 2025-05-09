@@ -179,10 +179,11 @@ def save_audio_for_web(resp, api_result):
         bv_code = api_result.get_callback_result().get('bv_code')
         # save file as binary
         audio_path = f'{tempfile.gettempdir()}/{bv_code}_{title}.mp3'
-        return tfu.download_with_progress_for_web(resp, audio_path, 'audio_path')
+        for chunk_event in tfu.download_with_progress_for_web(resp, audio_path, 'audio_path'):
+            yield chunk_event
     else:
         logger.error(f'下载失败, status code is {resp.status_code}')
-        return EventMessage(EventType.FAILED, f'下载失败, status code is {resp.status_code}')
+        yield EventMessage(EventType.FAILED, f'下载失败, status code is {resp.status_code}')
 
 
 def save_video_for_web(resp, api_result):
@@ -191,10 +192,11 @@ def save_video_for_web(resp, api_result):
         bv_code = api_result.get_callback_result().get('bv_code')
         # save file as binary
         video_path = f'{tempfile.gettempdir()}/{bv_code}_{title}.mp4'
-        return tfu.download_with_progress_for_web(resp, video_path, 'video_path')
+        for chunk_event in tfu.download_with_progress_for_web(resp, video_path, 'video_path'):
+            yield chunk_event
     else:
         logger.error(f'下载失败, status code is {resp.status_code}')
-        return EventMessage(EventType.FAILED, f'下载失败, status code is {resp.status_code}')
+        yield EventMessage(EventType.FAILED, f'下载失败, status code is {resp.status_code}')
 
 
 def combine_video(path_result):
@@ -354,6 +356,7 @@ def download_video_for_web(url, p_codes, quality=None):
         else:
             p_codes = [p_codes]
     p_codes = list(map(lambda x: str(x), p_codes))
+    yield EventMessage(EventType.STRING,'正在解析地址')
     video_detail = get_detail(url)
     video_detail_json = video_detail.get_callback_result()
     if video_detail_json.get('is_list'):
@@ -363,9 +366,11 @@ def download_video_for_web(url, p_codes, quality=None):
             logger.info(f'准备下载 {episode.get("title")}')
             sub_video_detail = Api(bilibili_common.format_url(url, p=episode.get('p'))).headers(
                 bilibili_common.get_headers()).callback(get_detail_callback).send()
-            return download_and_combine_for_web(sub_video_detail, quality)
+            for download_event in download_and_combine_for_web(sub_video_detail, quality):
+                yield download_event
     else:
-        return download_and_combine_for_web(video_detail, quality)
+        for download_event in download_and_combine_for_web(video_detail, quality):
+            yield download_event
 
 
 def download_video_stream(bvid=None, avid=None, cid=None, qn=None, filename=None):
