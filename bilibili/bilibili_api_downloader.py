@@ -105,7 +105,7 @@ def combine_video(path_result):
                     ])
     os.remove(path_result.get('audio_path'))
     os.remove(path_result.get('video_path'))
-    logger.info(f'{mp4_filename} Download success, you can find it {get_bilibili_conf("bilibili_video_path")}')
+    logger.info(f'{mp4_filename} Download success, you can find it {conf_util.get_bilibili_conf("bilibili_video_path")}')
 
 
 def download_video(bvid=None, avid=None, cid=None, qn=None):
