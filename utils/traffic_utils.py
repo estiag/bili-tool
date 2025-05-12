@@ -56,7 +56,8 @@ def download_with_progress_for_web(resp, path, key):
             percent = downloaded / total_size * 100
             if chunk:
                 f.write(chunk)
-                if int(percent / 10) > temp_percent:
-                    temp_percent = int(percent / 10)
+                integer_percent = int(percent / 1)
+                if integer_percent > temp_percent:
+                    temp_percent = integer_percent
                     yield EventMessage(EventType.PERCENTAGE, percent)
     yield EventMessage(EventType.OK, {key: path})

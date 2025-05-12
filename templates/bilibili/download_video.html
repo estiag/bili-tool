@@ -54,7 +54,7 @@
                     <div class="card-actions justify-end">
                         <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold" v-text="download_message"></p>
                         <select class=" select select-info select-sm  max-w-xs"
-                            :value="analyze_result.available_best_quality">
+                            :value="analyze_result.available_best_quality" v-once>
                             <option disabled>选择清晰度</option>
                             <option v-for="option in analyze_result.video_quality_option" v-text="option.name"
                                 :value="option.id"></option>
@@ -85,7 +85,7 @@
                             <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold"
                                 v-text="episode.download_message"></p>
                             <select class=" select select-info select-sm  max-w-xs"
-                                :value="analyze_result.available_best_quality">
+                                >
                                 <option disabled>选择清晰度</option>
                                 <option v-for="option in analyze_result.video_quality_option" v-text="option.name"
                                     :value="option.id"></option>
@@ -154,11 +154,11 @@
                         app.analyzing = false
                     });
             },
-            send_stream_request: function (p_codes_down, p_codes_index, quality, loadingElement) {
+            send_stream_request: function (each_p_code, quality, loadingElement) {
                 var episode_index = 0
                 var target_episode = {}
                 for (var j = 0; j < app.analyze_result.episodes.length; j++) {
-                    if (app.analyze_result.episodes[j].p == p_codes_down[p_codes_index]) {
+                    if (app.analyze_result.episodes[j].p == each_p_code) {
                         target_episode = app.analyze_result.episodes[j]
                         episode_index = j
                     }
@@ -167,7 +167,7 @@
                 target_episode.downloading = true
                 target_episode.progress = 0
                 app.$set(app.analyze_result.episodes, episode_index, target_episode)
-                const eventSource = new EventSource('/bilibili/video/download/stream?url=' + app.analyze_result.bv_code + '&p_codes=' + p_codes_down[p_codes_index] + '&quality=' + quality);
+                const eventSource = new EventSource('/bilibili/video/download/stream?url=' + app.analyze_result.bv_code + '&p_codes=' + each_p_code + '&quality=' + quality);
 
                 eventSource.onmessage = (e) => {
                     //console.log('收到事件:', e.data);
@@ -192,11 +192,10 @@
                     console.error('连接中断');
                     eventSource.close();
                     loadingElement.classList.add('hidden')
-
-                };
+					app.download_message = '下载失败'
+				};
                 eventSource.addEventListener('finish',
-                    function (event) {
-                        console.log('close');
+                    function (event) {  
                         eventSource.close()
                         loadingElement.classList.add('hidden')
                     });
@@ -225,7 +224,8 @@
                     app.progress = 0
                 }
                 for (var i = 0; i < p_codes_down.length; i++) {
-                    app.send_stream_request(p_codes_down, i, quality, loadingElement)
+					var each_p_code = p_codes_down[i]
+                    app.send_stream_request(each_p_code, quality, loadingElement)
                 }
 
             },
