@@ -135,18 +135,7 @@ def download_bilibili_video_stream():
 
     def receive_message(event_action):
         for result in event_action:
-            if isinstance(result, types.GeneratorType):
-                for result_2 in result:
-                    if isinstance(result_2, types.GeneratorType):
-                        for result_3 in result_2:
-                            print('---',result_3)
-                            yield f'data: {result_3}\n\n'
-                    else:
-                        print('--', result_2)
-                        yield f'data: {result_2}\n\n'
-            else:
-                print('-', result)
-                yield f'data: {result}\n\n'
+            yield f'data: {result}\n\n'
         yield 'event: finish\ndata: finish.\n\n'
 
     return Response(

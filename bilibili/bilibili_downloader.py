@@ -281,7 +281,7 @@ def download_and_combine(video_detail, quality):
 
 
 def download_and_combine_for_web(video_detail, quality):
-    video_result = Api(get_video_url(video_detail, quality)).headers(bilibili_common.get_headers()).send()
+    video_result = Api(get_video_url(video_detail, quality)).headers(bilibili_common.get_headers()).stream(True).send()
     video_save_result = None
     audio_save_result = None
     yield EventMessage(EventType.STRING, '正在下载视频')
@@ -291,7 +291,7 @@ def download_and_combine_for_web(video_detail, quality):
         elif result.message_type == EventType.OK:
             video_save_result = result.message
     yield EventMessage(EventType.STRING, '正在下载音频')
-    audio_result = Api(get_audio_url(video_detail)).headers(bilibili_common.get_headers()).send()
+    audio_result = Api(get_audio_url(video_detail)).headers(bilibili_common.get_headers()).stream(True).send()
     for result in save_audio_for_web(audio_result.get_resp(), video_detail):
         if result.message_type == EventType.PERCENTAGE:
             yield result
