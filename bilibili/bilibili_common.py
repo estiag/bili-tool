@@ -56,6 +56,7 @@ def get_headers():
         'cookie': conf_util.get_user_conf("bilibili_cookie"),
     }
 
+
 def get_base_headers():
     return {
         'origin': 'https://www.bilibili.com',

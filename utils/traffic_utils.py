@@ -43,7 +43,7 @@ def download_with_progress(resp, path):
     print(f'\r')
 
 
-def download_with_progress_for_web(resp, path, key):
+def download_with_progress_for_web(resp, path):
     path_name = os.path.dirname(path)
     os.makedirs(path_name, exist_ok=True)
     downloaded = 0
@@ -60,4 +60,4 @@ def download_with_progress_for_web(resp, path, key):
                 if integer_percent > temp_percent:
                     temp_percent = integer_percent
                     yield EventMessage(EventType.PERCENTAGE, percent)
-    yield EventMessage(EventType.OK, {key: path})
+    yield EventMessage(EventType.OK, path)

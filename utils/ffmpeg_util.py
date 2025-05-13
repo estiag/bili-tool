@@ -1,3 +1,5 @@
+import subprocess
+
 from config.logger_config import get_logger
 from urllib.parse import urlparse
 import os
@@ -69,3 +71,21 @@ def check_ffmpeg():
     logger.info(f'ffmpeg is in {ffmpeg_exe}')
     global ffmpeg_exe_full_path
     ffmpeg_exe_full_path = ffmpeg_exe
+
+
+def combine_video(video_path, audio_path, save_path):
+    mp4_filename = os.path.basename(video_path)
+    os.makedirs(save_path, exist_ok=True)
+    final_video_path = f'{save_path}/{mp4_filename}'
+    subprocess.run([f'{ffmpeg_exe_full_path}',
+                    '-i',
+                    video_path,
+                    '-i',
+                    audio_path,
+                    '-c', 'copy', '-y',
+                    final_video_path
+                    ])
+    os.remove(audio_path)
+    os.remove(video_path)
+    logger.info(
+        f'{mp4_filename} Download success, you can find it {save_path}')

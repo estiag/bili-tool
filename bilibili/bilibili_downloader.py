@@ -12,6 +12,7 @@ import utils.traffic_utils as tfu
 import utils.ffmpeg_util as ffmpeg_util
 import bilibili.bilibili_common as bilibili_common
 from enums.message_type import EventType
+from utils import conf_util
 from utils.conf_util import get_bilibili_conf
 import tempfile
 import bilibili.wbi as wbi
@@ -168,7 +169,7 @@ def save_audio(resp, api_result):
         audio_path = f'{tempfile.gettempdir()}/{bv_code}_{title}.mp3'
         tfu.download_with_progress(resp, audio_path)
         logger.info(f'音频[{bv_code}_{title}]下载成功')
-        return {'audio_path': audio_path}
+        return audio_path
     else:
         logger.error(f'下载失败, status code is {resp.status_code}')
 
@@ -179,7 +180,7 @@ def save_audio_for_web(resp, api_result):
         bv_code = api_result.get_callback_result().get('bv_code')
         # save file as binary
         audio_path = f'{tempfile.gettempdir()}/{bv_code}_{title}.mp3'
-        for chunk_event in tfu.download_with_progress_for_web(resp, audio_path, 'audio_path'):
+        for chunk_event in tfu.download_with_progress_for_web(resp, audio_path):
             yield chunk_event
     else:
         logger.error(f'下载失败, status code is {resp.status_code}')
@@ -192,27 +193,11 @@ def save_video_for_web(resp, api_result):
         bv_code = api_result.get_callback_result().get('bv_code')
         # save file as binary
         video_path = f'{tempfile.gettempdir()}/{bv_code}_{title}.mp4'
-        for chunk_event in tfu.download_with_progress_for_web(resp, video_path, 'video_path'):
+        for chunk_event in tfu.download_with_progress_for_web(resp, video_path):
             yield chunk_event
     else:
         logger.error(f'下载失败, status code is {resp.status_code}')
         yield EventMessage(EventType.FAILED, f'下载失败, status code is {resp.status_code}')
-
-
-def combine_video(path_result):
-    mp4_filename = path_result.get("video_path").split("/")[-1]
-    final_video_path = f'{get_bilibili_conf("bilibili_video_path")}/{mp4_filename}'
-    subprocess.run([f'{ffmpeg_util.ffmpeg_exe_full_path}',
-                    '-i',
-                    path_result.get('video_path'),
-                    '-i',
-                    path_result.get('audio_path'),
-                    '-c', 'copy', '-y',
-                    final_video_path
-                    ], creationflags=subprocess.CREATE_NO_WINDOW)
-    os.remove(path_result.get('audio_path'))
-    os.remove(path_result.get('video_path'))
-    logger.info(f'{mp4_filename} Download success, you can find it {get_bilibili_conf("bilibili_video_path")}')
 
 
 def get_detail_json(url):
@@ -273,33 +258,31 @@ def analyze_video(url):
 
 def download_and_combine(video_detail, quality):
     video_result = Api(get_video_url(video_detail, quality)).headers(bilibili_common.get_headers()).send()
-    video_save_result = save_video(video_result.get_resp(), video_detail)
+    video_save_path = save_video(video_result.get_resp(), video_detail)
     audio_result = Api(get_audio_url(video_detail)).headers(bilibili_common.get_headers()).send()
-    audio_save_result = save_audio(audio_result.get_resp(), video_detail)
-    video_save_result.update(audio_save_result)
-    combine_video(video_save_result)
+    audio_save_path = save_audio(audio_result.get_resp(), video_detail)
+    ffmpeg_util.combine_video(video_save_path, audio_save_path, conf_util.get_bilibili_conf("bilibili_video_path"))
 
 
 def download_and_combine_for_web(video_detail, quality):
     video_result = Api(get_video_url(video_detail, quality)).headers(bilibili_common.get_headers()).stream(True).send()
-    video_save_result = None
-    audio_save_result = None
+    video_save_path = None
+    audio_save_path = None
     yield EventMessage(EventType.STRING, '正在下载视频')
     for result in save_video_for_web(video_result.get_resp(), video_detail):
         if result.message_type == EventType.PERCENTAGE:
             yield result
         elif result.message_type == EventType.OK:
-            video_save_result = result.message
+            video_save_path = result.message
     yield EventMessage(EventType.STRING, '正在下载音频')
     audio_result = Api(get_audio_url(video_detail)).headers(bilibili_common.get_headers()).stream(True).send()
     for result in save_audio_for_web(audio_result.get_resp(), video_detail):
         if result.message_type == EventType.PERCENTAGE:
             yield result
         elif result.message_type == EventType.OK:
-            audio_save_result = result.message
-    video_save_result.update(audio_save_result)
+            audio_save_path = result.message
     yield EventMessage(EventType.STRING, f'开始合并')
-    combine_video(video_save_result)
+    ffmpeg_util.combine_video(video_save_path, audio_save_path, conf_util.get_bilibili_conf("bilibili_video_path"))
     yield EventMessage(EventType.STRING, f'下载完成')
 
 
@@ -349,14 +332,14 @@ def download_video_for_web(url, p_codes, quality=None):
     """
     p_codes = p_codes
     if not isinstance(p_codes, list):
-        if isinstance(p_codes,int):
+        if isinstance(p_codes, int):
             p_codes = str(p_codes)
         if ',' in p_codes:
             p_codes = p_codes.split(',')
         else:
             p_codes = [p_codes]
     p_codes = list(map(lambda x: str(x), p_codes))
-    yield EventMessage(EventType.STRING,'正在解析地址')
+    yield EventMessage(EventType.STRING, '正在解析地址')
     video_detail = get_detail(url)
     video_detail_json = video_detail.get_callback_result()
     if video_detail_json.get('is_list'):

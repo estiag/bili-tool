@@ -133,11 +133,6 @@ def download_bilibili_video_stream():
     p_codes = request.args.get('p_codes')
     quality = request.args.get('quality')
 
-    def receive_message(event_action):
-        for result in event_action:
-            yield f'data: {result}\n\n'
-        yield 'event: finish\ndata: finish.\n\n'
-
     return Response(
         receive_message(bili_down.download_video_for_web(url_or_bvcode, p_codes=p_codes, quality=quality)),
         mimetype='text/event-stream'
@@ -160,17 +155,15 @@ def analyze_bilibili_video_api():
     url_or_bvcode = request.args.get('url')
     try:
         result = bili_api_down.analyze_video(url_or_bvcode)
-        if result.get('data').get('videos') > 1:
+        if result.get('data').get('videos') > 0:
             for each_video in result.get('data').get('pages'):
                 each_video_result = bili_api_down.get_video_info(bvid=bilibili_common.get_bv_code(url_or_bvcode),
                                                                  cid=each_video.get('cid'))
                 each_video.update({'support_formats': each_video_result.get('data').get('support_formats')})
-        else:
-            video_result = bili_api_down.get_video_info(bvid=bilibili_common.get_bv_code(url_or_bvcode),
-                                                        cid=result.get('data').get('cid'))
-            result.get('data').update({'support_formats': video_result.get('data').get('support_formats')})
+                each_video.update({'quality': each_video_result.get('data').get('support_formats')[0].get('quality')})
         return result
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         return '无效的链接或BV码', 400
 
 
@@ -190,6 +183,18 @@ def download_bilibili_video_api():
     for cid in cids.split(','):
         bili_api_down.download_video(bvid=bvid, cid=cid.strip(), qn=quality)
     return 'ok'
+
+
+@app.route("/bilibili/api/download/video/stream", methods=['GET'])
+def download_bilibili_video_api_stream():
+    bvid = request.args.get('bvid')
+    # api方式下载cid不能为空
+    cid = request.args.get('cid')
+    quality = request.args.get('quality')
+    return Response(
+        receive_message(bili_api_down.download_video_for_web(bvid=bvid, cid=cid.strip(), qn=quality)),
+        mimetype='text/event-stream'
+    )
 
 
 @app.route("/bilibili/api/login/view", methods=['GET'])
@@ -290,6 +295,12 @@ def start_server():
 def start_webview():
     webview.create_window('BiliTool', 'http://localhost:5000/')
     webview.start(start_server)
+
+
+def receive_message(event_action):
+    for result in event_action:
+        yield f'data: {result}\n\n'
+    yield 'event: finish\ndata: finish.\n\n'
 
 
 if __name__ == "__main__":

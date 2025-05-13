@@ -20,18 +20,18 @@
 <body>
     <div id="app" v-cloak>
         <div class="max-w-3xl mx-auto">
-          <nav class="navbar p-0 w-full">
-            <h3 class="mt-0 text-xl font-semibold leading-normal">
-                <a href="/">首页</a>->下载视频(API方式)
-            </h3>
-          </nav>
+            <nav class="navbar p-0 w-full">
+                <h3 class="mt-0 text-xl font-semibold leading-normal">
+                    <a href="/">首页</a>->下载视频(API方式)
+                </h3>
+            </nav>
         </div>
 
         <div class="max-w-3xl mx-auto pb-6 text-center transition-all" :class="{'m-[20vh]':!data}">
             <tips ref="child"></tips>
             <div class="join w-full">
-                <input v-model="url" class="input input-bordered w-full join-item rounded-l-full"
-                    placeholder="bvid或url" @keyup.enter="analyze"/>
+                <input v-model="url" class="input input-bordered w-full join-item rounded-l-full" placeholder="bvid或url"
+                    @keyup.enter="analyze" />
                 <button class="btn btn-accent join-item rounded-r-full" :class="{'btn-disabled':!url}" @click="analyze">
                     <span class="loading loading-spinner" v-show="analyzing"></span>
                     解析
@@ -49,27 +49,33 @@
                 <div class="card-body truncate">
                     <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold" v-text="data.title"></p>
                     <div class="card-actions justify-end">
-                        <select class="select select-info select-sm  max-w-xs" v-show="data.videos <= 1">
+                        <select class="select select-info select-sm  max-w-xs" v-show="data.videos == 1"
+                            v-model="data.pages[0].quality">
                             <option disabled>选择清晰度</option>
-                            <option v-for="option in data.support_formats" v-text="option.new_description"
+                            <option v-for="option in data.pages[0].support_formats" v-text="option.new_description"
                                 :value="option.quality"></option>
                         </select>
-                        <button @click="download($event)" class="ml-2 btn btn-accent btn-sm" :class="{'btn-disabled':data.videos > 1 && cids.length == 0}">
-                            <span class="loading loading-spinner hidden"></span>
+                        <button @click="download($event)" class="ml-2 btn btn-accent btn-sm"
+                            :class="{'btn-disabled':data.videos > 1 && select_cids.length == 0}">
+                            <span class="loading loading-spinner"
+                                v-show="data.videos <= 1 && data.pages[0].downloa_state && data.pages[0].downloa_state=='DOWNLOADING'"></span>
                             <span v-if="data.videos > 1">下载已选</span>
                             <span v-else>下载</span>
                         </button>
                     </div>
                 </div>
+                <progress class="progress absolute progress-accent w-full" :value="data.pages[0].progress" max="100"
+                    style="top: 94%;"
+                    v-show="data.videos == 1 && data.pages[0].downloa_state=='DOWNLOADING'"></progress>
             </div>
         </div>
         <div v-if="data.videos > 1">
             <div v-for="episode in data.pages" class="max-w-3xl mx-auto py-1 flex">
                 <div class="flex items-center pr-2">
-                    <input type="checkbox" class="checkbox checkbox-accent sub-p-checkbox"
-                        v-model="cids" :value="episode.cid" @click="checkCid($event, episode.cid, episode.part)"/>
+                    <input type="checkbox" class="checkbox checkbox-accent sub-p-checkbox" v-model="select_cids"
+                        :value="episode.cid" @click="checkCid($event, episode.cid, episode.part)" />
                 </div>
-                <div class="card card-side shadow-lg w-full">
+                <div class="card overflow-hidden card-side shadow-lg w-full">
                     <figure>
                         <img class="max-h-24" :src="episode.first_frame" v-show="data.pic" />
                     </figure>
@@ -77,17 +83,23 @@
                         <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold"
                             v-text="'P'+ episode.page +': '+ episode.part"></p>
                         <div class="card-actions justify-end">
-                            <select class=" select select-info select-sm  max-w-xs">
+                            <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold"
+                                v-text="episode.download_message"></p>
+                            <select class="select select-info select-sm  max-w-xs" v-model="episode.quality">
                                 <option disabled>选择清晰度</option>
                                 <option v-for="option in episode.support_formats" v-text="option.new_description"
                                     :value="option.quality"></option>
                             </select>
-                            <button class="ml-2 btn btn-accent btn-sm" @click="download($event, episode.cid, episode.part)">
-                                <span class="loading loading-spinner hidden"></span>
+                            <button class="ml-2 btn btn-accent btn-sm"
+                                @click="download($event, episode.cid, episode.part)">
+                                <span class="loading loading-spinner"
+                                    v-show="episode.downloa_state=='DOWNLOADING'"></span>
                                 下载
                             </button>
                         </div>
                     </div>
+                    <progress class="progress absolute progress-accent w-full" :value="episode.progress" max="100"
+                        style="top: 94%;" v-show="episode.downloa_state=='DOWNLOADING'"></progress>
                 </div>
             </div>
 
@@ -103,16 +115,15 @@
             cover_url: '',
             analyze_result: '',
             analyzing: false,
-            p_codes: [],
-            cids: [],
-            checkAll: false
-        }, 
-        watch:{
-            cids:function(){
-                if(app.cids.length==app.data.pages.length){
+            select_cids: [],
+            checkAll: false,
+        },
+        watch: {
+            select_cids: function () {
+                if (app.select_cids.length == app.data.pages.length) {
                     app.checkAll = true
-                }else{
-                    app.checkAll=false
+                } else {
+                    app.checkAll = false
                 }
             }
         },
@@ -126,55 +137,90 @@
                 axios.get('/bilibili/api/video/analyze?url=' + app.url)
                     .then(response => {
                         app.data = response.data.data
-                        app.data.pic = '/bilibili/api/cover?url=' +  app.data.pic
-                        app.data.pages.forEach(function(eachPart){
+                        app.data.pic = '/bilibili/api/cover?url=' + app.data.pic
+                        app.data.pages.forEach(function (eachPart) {
                             eachPart.first_frame = '/bilibili/api/cover?url=' + eachPart.first_frame
                         })
                         app.analyzing = false
                     })
                     .catch(error => {
-                        app.$refs.child.visible=true
-                        app.$refs.child.message=error.response.data
-                        setTimeout(function(){app.$refs.child.visible=false},2000)
+                        app.$refs.child.visible = true
+                        app.$refs.child.message = error.response.data
+                        setTimeout(function () { app.$refs.child.visible = false }, 2000)
                         app.analyzing = false
                     });
             },
             download: function (event, cid) {
-                var loadingElement = event.currentTarget.getElementsByClassName('loading')[0]
-                if (!loadingElement.classList.contains('hidden')){
-                    return
-                }
-                var quality = event.currentTarget.parentElement.getElementsByTagName('select')[0].value
 
-                loadingElement.classList.remove('hidden')
-                if(app.data.videos <= 1){
-                    cid = app.data.cid
+                var download_cids = []
+                if (cid) {
+                    //点击的是单个视频的下载
+                    download_cids = [cid]
+                } else {
+                    if (app.data.videos == 1) {
+                        //单视频内容
+                        download_cids = [app.data.cid]
+                    } else {
+                        //视频合集
+                        download_cids = app.select_cids
+                    }
                 }
-                axios.get('/bilibili/api/download/video?bvid=' + app.data.bvid + '&cids=' + (cid || app.cids)+'&quality=' + quality)
-                    .then(response => {
-                        loadingElement.classList.add('hidden')
-                    })
-                    .catch(error => {
-                        app.$refs.child.visible=true
-                        app.$refs.child.message=error.response.data
-                        setTimeout(function(){app.$refs.child.visible=false},2000)
-                       app.$refs.child.message=error.response.data
-                    });
+
+                for (var i = 0; i < download_cids.length; i++) {
+                    var episode_index = 0
+                    var target_episode = {}
+                    for (var j = 0; j < app.data.pages.length; j++) {
+                        if (app.data.pages[j].cid == download_cids[i]) {
+                            target_episode = app.data.pages[j]
+                            episode_index = j
+                        }
+                    }
+                    if (target_episode.downloa_state == 'DOWNLOADING') {
+                        continue
+                    }
+                    target_episode.downloa_state == 'DOWNLOADING'
+                    target_episode.progress = 0
+                    app.$set(app.data.pages, episode_index, target_episode)
+                    const eventSource = new EventSource('/bilibili/api/download/video/stream?bvid=' + app.data.bvid + '&cid=' + target_episode.cid + '&quality=' + target_episode.quality);
+                    eventSource.onmessage = (e) => {
+                        console.log('收到事件:', e.data);
+                        if (e.data.split(',')[0] == 1) {
+                            target_episode.download_message = e.data.split(',')[1]
+                            app.$set(app.data.pages, episode_index, target_episode)
+                        } else if (e.data.split(',')[0] == 0) {
+                            target_episode.progress = e.data.split(',')[1]
+                            app.$set(app.data.pages, episode_index, target_episode)
+                        }
+                    };
+
+                    eventSource.onerror = () => {
+                        console.error('连接中断');
+                        eventSource.close();
+                        target_episode.download_message = '下载失败'
+                        target_episode.downloa_state == 'FINISH'
+                    };
+                    eventSource.addEventListener('finish',
+                        function (event) {
+                            eventSource.close()
+                            target_episode.downloa_state == 'FINISH'
+                        });
+
+                }
             },
             clickCheckAll: function () {
                 if (!app.checkAll) {
-                    app.data.pages.forEach(function(eachPart){
-                      app.cids.push(eachPart.cid)
+                    app.data.pages.forEach(function (eachPart) {
+                        app.select_cids.push(eachPart.cid)
                     })
                 } else {
-                    app.cids = []
+                    app.select_cids = []
                 }
             },
-            checkCid:function(event,cid,title){
-                if(event.target.checked){
-                   app.cids.push(cid)
-                }else{
-                   app.cids = app.cids.filter(item => item != cid)
+            checkCid: function (event, cid, title) {
+                if (event.target.checked) {
+                    app.select_cids.push(cid)
+                } else {
+                    app.select_cids = app.select_cids.filter(item => item != cid)
                 }
             }
         }

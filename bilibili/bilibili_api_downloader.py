@@ -5,17 +5,18 @@ import tempfile
 import qrcode as qrcode
 
 from api.api import Api
+from bilibili.event_message import EventMessage
 from config.logger_config import get_logger
 from urllib.parse import urlunparse, urlencode, parse_qs, urlparse
 import bilibili.bilibili_common as bilibili_common
 import bilibili.wbi as wbi
 import utils.traffic_utils as tfu
+from enums.message_type import EventType
 from utils import conf_util
 import os
 import subprocess
 import utils.ffmpeg_util as ffmpeg_util
 from flask import send_from_directory
-
 
 logger = get_logger()
 
@@ -91,23 +92,6 @@ def get_video_info(bvid=None, avid=None, cid=None, qn=None):
     return Api(base_url).headers(bilibili_common.get_headers()).send().get_resp().json()
 
 
-def combine_video(path_result):
-    mp4_filename = os.path.basename(path_result.get("video_path"))
-    os.makedirs(conf_util.get_bilibili_conf("bilibili_video_path"), exist_ok=True)
-    final_video_path = f'{conf_util.get_bilibili_conf("bilibili_video_path")}/{mp4_filename}'
-    subprocess.run([f'{ffmpeg_util.ffmpeg_exe_full_path}',
-                    '-i',
-                    path_result.get('video_path'),
-                    '-i',
-                    path_result.get('audio_path'),
-                    '-c', 'copy', '-y',
-                    final_video_path
-                    ])
-    os.remove(path_result.get('audio_path'))
-    os.remove(path_result.get('video_path'))
-    logger.info(f'{mp4_filename} Download success, you can find it {conf_util.get_bilibili_conf("bilibili_video_path")}')
-
-
 def download_video(bvid=None, avid=None, cid=None, qn=None):
     video_info = get_video_info(bvid, avid, cid, qn)
     global last_video_detail
@@ -135,7 +119,54 @@ def download_video(bvid=None, avid=None, cid=None, qn=None):
     audio_resp = Api(best_audio.get('backup_url')[0]).headers(bilibili_common.get_headers()).send().get_resp()
     final_audio_path = f'{tempfile.gettempdir()}/{title}.mp3'
     tfu.download_with_progress(audio_resp, final_audio_path)
-    combine_video({'video_path': final_video_path, 'audio_path': final_audio_path})
+    ffmpeg_util.combine_video(final_video_path, final_audio_path, conf_util.get_bilibili_conf("bilibili_video_path"))
+
+
+def download_video_for_web(bvid=None, avid=None, cid=None, qn=None):
+    yield EventMessage(EventType.STRING, '正在解析地址')
+    video_info = get_video_info(bvid, avid, cid, qn)
+    global last_video_detail
+    if last_video_detail and last_video_detail.get('data').get('bvid') == bvid:
+        if last_video_detail.get('data').get('videos') > 1:
+            title = list(filter(lambda x: str(x.get('cid')) == cid, last_video_detail.get('data').get('pages')))[0].get(
+                'part')
+        else:
+            title = last_video_detail.get('data').get('title')
+    else:
+        title = cid
+    videos = video_info.get('data').get('dash').get('video')
+    hit_videos = list(filter(lambda x: x.get('id') == int(qn), videos))
+    if len(hit_videos) < 1:
+        resp = Api(videos[0].get('backup_url')[0]).headers(bilibili_common.get_headers()).stream(True).send().get_resp()
+    else:
+        resp = Api(hit_videos[0].get('backup_url')[0]).headers(bilibili_common.get_headers()).stream(
+            True).send().get_resp()
+    final_video_path = f'{tempfile.gettempdir()}/{title}.mp4'
+    video_save_path = None
+    audio_save_path = None
+    yield EventMessage(EventType.STRING, '正在下载视频')
+    for chunk_event in tfu.download_with_progress_for_web(resp, final_video_path):
+        if chunk_event.message_type == EventType.PERCENTAGE:
+            yield chunk_event
+        elif chunk_event.message_type == EventType.OK:
+            video_save_path = chunk_event.message
+    audios = video_info.get('data').get('dash').get('audio')
+    best_audio = {}
+    for audio in audios:
+        if not best_audio or best_audio.get('id') < audio.get('id'):
+            best_audio = audio
+    yield EventMessage(EventType.STRING, '正在下载音频')
+    audio_resp = Api(best_audio.get('backup_url')[0]).headers(bilibili_common.get_headers()).stream(
+        True).send().get_resp()
+    final_audio_path = f'{tempfile.gettempdir()}/{title}.mp3'
+    for chunk_event in tfu.download_with_progress_for_web(audio_resp, final_audio_path):
+        if chunk_event.message_type == EventType.PERCENTAGE:
+            yield chunk_event
+        elif chunk_event.message_type == EventType.OK:
+            audio_save_path = chunk_event.message
+    yield EventMessage(EventType.STRING, f'开始合并')
+    ffmpeg_util.combine_video(video_save_path, audio_save_path, conf_util.get_bilibili_conf("bilibili_video_path"))
+    yield EventMessage(EventType.STRING, f'下载完成')
 
 
 def login_qrcode_poll(qrcode_key):
