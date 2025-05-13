@@ -1,5 +1,7 @@
-### 功能介绍
-bilibili媒体下载工具
+### 介绍
+bilibili媒体下载工具，Windows用户可直接下载最新发行版本使用
+
+### 功能
 - 视频下载
 - 封面下载
 - 关注列表
@@ -16,7 +18,7 @@ bilibili媒体下载工具
 - 需要python运行环境
 - 首次运行需要下载ffmpeg(自动完成)
 
-### 打包成windows可执行文件使用
+### 打包windows可执行文件
 1. 如果没有server.spec需要首先生成 `pyi-makespec --add-data "config/*.conf:config" --add-data "static:static" --add-data "templates:templates" --add-data "download:download" --icon=static/favicon.ico --windowed bilitool.py`
 2. 编写server.spec
 3. `pyinstaller bilitool.spec`
