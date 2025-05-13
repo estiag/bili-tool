@@ -20,8 +20,6 @@ from flask import send_from_directory
 
 logger = get_logger()
 
-last_video_detail = {}
-
 
 def analyze_video(bv_code_or_url):
     bv_code = bilibili_common.get_bv_code(bv_code_or_url)
@@ -33,8 +31,6 @@ def analyze_video(bv_code_or_url):
     query = urlencode(param)
     result = Api(env=bilibili_common.env_bilibili_api).path(f'/x/web-interface/wbi/view?{query}') \
         .headers(bilibili_common.get_base_headers()).send_and_get_json()
-    global last_video_detail
-    last_video_detail = result
     return result
 
 
@@ -94,22 +90,14 @@ def get_video_info(bvid=None, avid=None, cid=None, qn=None):
 
 def download_video(bvid=None, avid=None, cid=None, qn=None):
     video_info = get_video_info(bvid, avid, cid, qn)
-    global last_video_detail
-    if last_video_detail and last_video_detail.get('data').get('bvid') == bvid:
-        if last_video_detail.get('data').get('videos') > 1:
-            title = list(filter(lambda x: str(x.get('cid')) == cid, last_video_detail.get('data').get('pages')))[0].get(
-                'part')
-        else:
-            title = last_video_detail.get('data').get('title')
-    else:
-        title = cid
+    title = cid
     videos = video_info.get('data').get('dash').get('video')
     hit_videos = list(filter(lambda x: x.get('id') == int(qn), videos))
     if len(hit_videos) < 1:
         resp = Api(videos[0].get('backup_url')[0]).headers(bilibili_common.get_headers()).send().get_resp()
     else:
         resp = Api(hit_videos[0].get('backup_url')[0]).headers(bilibili_common.get_headers()).send().get_resp()
-    final_video_path = f'{tempfile.gettempdir()}/{title}.mp4'
+    final_video_path = f'{tempfile.gettempdir()}/{bvid}_{title}.mp4'
     tfu.download_with_progress(resp, final_video_path)
     audios = video_info.get('data').get('dash').get('audio')
     best_audio = {}
@@ -117,23 +105,15 @@ def download_video(bvid=None, avid=None, cid=None, qn=None):
         if not best_audio or best_audio.get('id') < audio.get('id'):
             best_audio = audio
     audio_resp = Api(best_audio.get('backup_url')[0]).headers(bilibili_common.get_headers()).send().get_resp()
-    final_audio_path = f'{tempfile.gettempdir()}/{title}.mp3'
+    final_audio_path = f'{tempfile.gettempdir()}/{bvid}_{title}.mp3'
     tfu.download_with_progress(audio_resp, final_audio_path)
     ffmpeg_util.combine_video(final_video_path, final_audio_path, conf_util.get_bilibili_conf("bilibili_video_path"))
 
 
-def download_video_for_web(bvid=None, avid=None, cid=None, qn=None):
+def download_video_for_web(bvid=None, avid=None, cid=None, qn=None, title=None):
     yield EventMessage(EventType.STRING, '正在解析地址')
     video_info = get_video_info(bvid, avid, cid, qn)
-    global last_video_detail
-    if last_video_detail and last_video_detail.get('data').get('bvid') == bvid:
-        if last_video_detail.get('data').get('videos') > 1:
-            title = list(filter(lambda x: str(x.get('cid')) == cid, last_video_detail.get('data').get('pages')))[0].get(
-                'part')
-        else:
-            title = last_video_detail.get('data').get('title')
-    else:
-        title = cid
+    title = title or cid
     videos = video_info.get('data').get('dash').get('video')
     hit_videos = list(filter(lambda x: x.get('id') == int(qn), videos))
     if len(hit_videos) < 1:
@@ -141,7 +121,7 @@ def download_video_for_web(bvid=None, avid=None, cid=None, qn=None):
     else:
         resp = Api(hit_videos[0].get('backup_url')[0]).headers(bilibili_common.get_headers()).stream(
             True).send().get_resp()
-    final_video_path = f'{tempfile.gettempdir()}/{title}.mp4'
+    final_video_path = f'{tempfile.gettempdir()}/{bvid}_{title}.mp4'
     video_save_path = None
     audio_save_path = None
     yield EventMessage(EventType.STRING, '正在下载视频')
@@ -158,7 +138,7 @@ def download_video_for_web(bvid=None, avid=None, cid=None, qn=None):
     yield EventMessage(EventType.STRING, '正在下载音频')
     audio_resp = Api(best_audio.get('backup_url')[0]).headers(bilibili_common.get_headers()).stream(
         True).send().get_resp()
-    final_audio_path = f'{tempfile.gettempdir()}/{title}.mp3'
+    final_audio_path = f'{tempfile.gettempdir()}/{bvid}_{title}.mp3'
     for chunk_event in tfu.download_with_progress_for_web(audio_resp, final_audio_path):
         if chunk_event.message_type == EventType.PERCENTAGE:
             yield chunk_event
@@ -249,4 +229,7 @@ def get_bilibili_img_download_stream(filename):
 
 
 def get_current_vmid():
-    return conf_util.get_user_conf('bilibili_current_vmid')
+    try:
+        return conf_util.get_user_conf('bilibili_current_vmid')
+    except Exception as e:
+        return ''

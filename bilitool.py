@@ -1,4 +1,5 @@
 import io
+import threading
 import types
 
 import webview
@@ -159,7 +160,12 @@ def analyze_bilibili_video_api():
             for each_video in result.get('data').get('pages'):
                 each_video_result = bili_api_down.get_video_info(bvid=bilibili_common.get_bv_code(url_or_bvcode),
                                                                  cid=each_video.get('cid'))
-                each_video.update({'support_formats': each_video_result.get('data').get('support_formats')})
+                support_formats = each_video_result.get('data').get('support_formats')
+                if not bili_api_down.get_current_vmid():
+                    for each_format in support_formats:
+                        if each_format.get('quality') > 32:
+                            each_format.update({'new_description': each_format.get('new_description') + '(需登录)'})
+                each_video.update({'support_formats': support_formats})
                 each_video.update({'quality': each_video_result.get('data').get('support_formats')[0].get('quality')})
         return result
     except Exception as e:
@@ -191,8 +197,9 @@ def download_bilibili_video_api_stream():
     # api方式下载cid不能为空
     cid = request.args.get('cid')
     quality = request.args.get('quality')
+    title = request.args.get('title')
     return Response(
-        receive_message(bili_api_down.download_video_for_web(bvid=bvid, cid=cid.strip(), qn=quality)),
+        receive_message(bili_api_down.download_video_for_web(bvid=bvid, cid=cid.strip(), qn=quality, title=title)),
         mimetype='text/event-stream'
     )
 
@@ -264,10 +271,7 @@ def get_bilibili_img_download_stream():
 
 @app.route("/bilibili/user/current", methods=['GET'])
 def bilibili_current_user():
-    try:
-        return bili_api_down.get_current_vmid()
-    except Exception:
-        return ''
+    return bili_api_down.get_current_vmid()
 
 
 @app.route("/system/user/theme", methods=['GET'])
@@ -293,8 +297,8 @@ def start_server():
 
 
 def start_webview():
-    webview.create_window('BiliTool', 'http://localhost:5000/')
-    webview.start(start_server)
+    webview.create_window('BiliTool', 'http://localhost:5000/', confirm_close=True)
+    webview.start()
 
 
 def receive_message(event_action):
@@ -304,5 +308,8 @@ def receive_message(event_action):
 
 
 if __name__ == "__main__":
+    t = threading.Thread(target=start_server)
+    t.daemon = True  # 设置为守护线程
+    t.start()
     # 启动webview
     start_webview()

@@ -154,7 +154,8 @@
                     });
             },
             send_stream_request: function (target_episode, episode_index) {
-                const eventSource = new EventSource('/bilibili/api/download/video/stream?bvid=' + app.data.bvid + '&cid=' + target_episode.cid + '&quality=' + target_episode.quality);
+                const eventSource = new EventSource('/bilibili/api/download/video/stream?bvid=' + app.data.bvid + '&cid=' + target_episode.cid +
+                    '&quality=' + target_episode.quality + '&title=' + target_episode.part);
                 eventSource.onmessage = (e) => {
                     //console.log('收到事件:', e.data);
                     if (e.data.split(',')[0] == 1) {
