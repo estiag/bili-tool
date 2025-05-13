@@ -49,6 +49,8 @@
                 <div class="card-body truncate">
                     <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold" v-text="data.title"></p>
                     <div class="card-actions justify-end">
+                        <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold" v-show="data.videos == 1"
+                            v-text="data.pages[0].download_message"></p>
                         <select class="select select-info select-sm  max-w-xs" v-show="data.videos == 1"
                             v-model="data.pages[0].quality">
                             <option disabled>选择清晰度</option>
@@ -58,7 +60,7 @@
                         <button @click="download($event)" class="ml-2 btn btn-accent btn-sm"
                             :class="{'btn-disabled':data.videos > 1 && select_cids.length == 0}">
                             <span class="loading loading-spinner"
-                                v-show="data.videos <= 1 && data.pages[0].downloa_state && data.pages[0].downloa_state=='DOWNLOADING'"></span>
+                                v-show="data.videos == 1 && data.pages[0].downloa_state=='DOWNLOADING'"></span>
                             <span v-if="data.videos > 1">下载已选</span>
                             <span v-else>下载</span>
                         </button>
@@ -66,7 +68,7 @@
                 </div>
                 <progress class="progress absolute progress-accent w-full" :value="data.pages[0].progress" max="100"
                     style="top: 94%;"
-                    v-show="data.videos == 1 && data.pages[0].downloa_state=='DOWNLOADING'"></progress>
+                    v-show="data.videos == 1 && (data.pages[0].downloa_state=='DOWNLOADING' || data.pages[0].downloa_state=='FINISH')"></progress>
             </div>
         </div>
         <div v-if="data.videos > 1">
@@ -99,7 +101,8 @@
                         </div>
                     </div>
                     <progress class="progress absolute progress-accent w-full" :value="episode.progress" max="100"
-                        style="top: 94%;" v-show="episode.downloa_state=='DOWNLOADING'"></progress>
+                        style="top: 94%;"
+                        v-show="episode.downloa_state=='DOWNLOADING' || episode.downloa_state=='FINISH'"></progress>
                 </div>
             </div>
 
@@ -150,6 +153,34 @@
                         app.analyzing = false
                     });
             },
+            send_stream_request: function (target_episode, episode_index) {
+                const eventSource = new EventSource('/bilibili/api/download/video/stream?bvid=' + app.data.bvid + '&cid=' + target_episode.cid + '&quality=' + target_episode.quality);
+                eventSource.onmessage = (e) => {
+                    //console.log('收到事件:', e.data);
+                    if (e.data.split(',')[0] == 1) {
+                        target_episode.download_message = e.data.split(',')[1]
+                        app.$set(app.data.pages, episode_index, target_episode)
+                    } else if (e.data.split(',')[0] == 0) {
+                        target_episode.progress = e.data.split(',')[1]
+                        app.$set(app.data.pages, episode_index, target_episode)
+                    }
+                };
+
+                eventSource.onerror = () => {
+                    console.error('连接中断');
+                    eventSource.close();
+                    target_episode.download_message = '下载失败'
+                    target_episode.downloa_state = 'FINISH'
+                    app.$set(app.data.pages, episode_index, target_episode)
+                };
+                eventSource.addEventListener('finish',
+                    function (event) {
+                        eventSource.close()
+                        target_episode.downloa_state = 'FINISH'
+                        app.$set(app.data.pages, episode_index, target_episode)
+                    });
+
+            },
             download: function (event, cid) {
 
                 var download_cids = []
@@ -178,33 +209,10 @@
                     if (target_episode.downloa_state == 'DOWNLOADING') {
                         continue
                     }
-                    target_episode.downloa_state == 'DOWNLOADING'
+                    target_episode.downloa_state = 'DOWNLOADING'
                     target_episode.progress = 0
                     app.$set(app.data.pages, episode_index, target_episode)
-                    const eventSource = new EventSource('/bilibili/api/download/video/stream?bvid=' + app.data.bvid + '&cid=' + target_episode.cid + '&quality=' + target_episode.quality);
-                    eventSource.onmessage = (e) => {
-                        console.log('收到事件:', e.data);
-                        if (e.data.split(',')[0] == 1) {
-                            target_episode.download_message = e.data.split(',')[1]
-                            app.$set(app.data.pages, episode_index, target_episode)
-                        } else if (e.data.split(',')[0] == 0) {
-                            target_episode.progress = e.data.split(',')[1]
-                            app.$set(app.data.pages, episode_index, target_episode)
-                        }
-                    };
-
-                    eventSource.onerror = () => {
-                        console.error('连接中断');
-                        eventSource.close();
-                        target_episode.download_message = '下载失败'
-                        target_episode.downloa_state == 'FINISH'
-                    };
-                    eventSource.addEventListener('finish',
-                        function (event) {
-                            eventSource.close()
-                            target_episode.downloa_state == 'FINISH'
-                        });
-
+                    app.send_stream_request(target_episode, episode_index)
                 }
             },
             clickCheckAll: function () {
