@@ -17,15 +17,15 @@ bilibili媒体下载工具，Windows用户可直接下载最新发行版本使�
 ### 交互式命令
 直接运行[bilitool-console.py](bilitool-console.py)，按照提示操作即可
 - 需要python运行环境
-- 首次运行需要下载ffmpeg(自动完成)
+- 如果是Linux用户需要安装ffmpeg，例如Ubuntu`apt install ffmpeg`,windows用户不需要此步骤
 
 #### 使用http服务器
 运行[bilitool-server.py](bilitool-server.py)，打开浏览器访问http://localhost:5000
 - 需要python运行环境
-- 首次运行需要下载ffmpeg(自动完成)
+- 如果是Linux用户需要安装ffmpeg，例如Ubuntu`apt install ffmpeg`,windows用户不需要此步骤
 
 ### 打包windows可执行文件
-1. 如果没有server.spec需要首先生成 `pyi-makespec --add-data "config/*.conf:config" --add-data "static:static" --add-data "templates:templates" --add-data "download:download" --icon=static/favicon.ico --windowed bilitool.py`
+1. 如果没有server.spec需要首先生成 `pyi-makespec --add-data "config/*.conf:config" --add-data "static:static" --add-data "templates:templates" --add-data "download:download" --add-data "ffmpeg:ffmpeg" --icon=static/favicon.ico --windowed bilitool.py`
 2. 编写server.spec
 3. `pyinstaller bilitool.spec`
 在dist目录可以找到可执行文件，不需要python环境，可以直接使用打包好的发布版本

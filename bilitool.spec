@@ -5,7 +5,7 @@ a = Analysis(
     ['bilitool.py'],
     pathex=[],
     binaries=[],
-    datas=[('config/*.conf', 'config'), ('static', 'static'), ('templates', 'templates'), ('download', 'download')],
+    datas=[('config/*.conf', 'config'), ('static', 'static'), ('templates', 'templates'), ('download', 'download'), ('ffmpeg', 'ffmpeg')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

@@ -21,7 +21,7 @@ config_user.read(user_config_path, encoding='utf-8')
 def get_ffmpeg_conf(key):
     ffmpeg_conf = config_system.get('ffmpeg', key, raw=True)
     if key == 'ffmpeg_path':
-        if ffmpeg_conf.startswith('/'):
+        if os.path.isabs(ffmpeg_conf):
             return ffmpeg_conf
         else:
             return f'{project_dir}/{ffmpeg_conf}'

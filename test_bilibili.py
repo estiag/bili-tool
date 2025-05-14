@@ -11,7 +11,6 @@ from enums.message_type import EventType
 from utils import conf_util
 from utils.json_util import format_json
 import utils.validate_util as validate_util
-from utils.ffmpeg_util import check_ffmpeg
 import bilibili.bilibili_common as bilibili_common
 import bilibili.wbi as wbi
 from api.api import Api
@@ -24,9 +23,6 @@ class TestBilibili(unittest.TestCase):
         BV1tkVpzFE1k GTA 6
     """
 
-    # url的bv号后面要加/ 否则解析不到高清视频
-    def test_init_ffmpeg(self):
-        check_ffmpeg()
 
     def test_reorganize_url(self):
         print(validate_util.is_valid_url('BV1ASD233'))
