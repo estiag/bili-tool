@@ -1,5 +1,6 @@
 ### 介绍
-bilibili媒体下载工具，Windows用户可直接下载最新发行版本使用
+bilibili媒体下载工具，Windows用户可直接下载最新发行版本使用。解压后运行bilitool.exe即可。
+默认媒体保存位置在`_internal/download/bilibili/video`，此位置可以在设置页面修改
 
 ### 功能
 - 视频下载
