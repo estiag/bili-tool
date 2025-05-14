@@ -44,7 +44,7 @@ def enc_wbi(params: dict, img_key: str, sub_key: str):
 
 @cached(cache)
 def get_wbi_keys():
-    resp = Api('https://api.bilibili.com/x/web-interface/nav').headers(bilibili_common.get_headers()).send().get_resp()
+    resp = Api('https://api.bilibili.com/x/web-interface/nav').headers(bilibili_common.get_headers()).verify(False).send().get_resp()
     resp.raise_for_status()
     json_content = resp.json()
     img_url: str = json_content['data']['wbi_img']['img_url']

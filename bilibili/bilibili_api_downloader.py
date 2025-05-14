@@ -35,7 +35,7 @@ def analyze_video(bv_code_or_url):
 
 
 def get_cover(url):
-    img_result = Api(url).headers(bilibili_common.get_base_headers()).send()
+    img_result = Api(url).headers(bilibili_common.get_base_headers()).verify(False).send()
     return img_result.get_resp()
 
 
@@ -85,7 +85,7 @@ def get_video_info(bvid=None, avid=None, cid=None, qn=None):
     query = urlencode(signed_params)
     data = ['https', 'api.bilibili.com', '/x/player/wbi/playurl', '', query, '']
     base_url = urlunparse(data)
-    return Api(base_url).headers(bilibili_common.get_headers()).send().get_resp().json()
+    return Api(base_url).headers(bilibili_common.get_headers()).verify(False).send().get_resp().json()
 
 
 def download_video(bvid=None, avid=None, cid=None, qn=None):
@@ -94,9 +94,9 @@ def download_video(bvid=None, avid=None, cid=None, qn=None):
     videos = video_info.get('data').get('dash').get('video')
     hit_videos = list(filter(lambda x: x.get('id') == int(qn), videos))
     if len(hit_videos) < 1:
-        resp = Api(videos[0].get('backup_url')[0]).headers(bilibili_common.get_headers()).send().get_resp()
+        resp = Api(videos[0].get('backup_url')[0]).headers(bilibili_common.get_headers()).verify(False).send().get_resp()
     else:
-        resp = Api(hit_videos[0].get('backup_url')[0]).headers(bilibili_common.get_headers()).send().get_resp()
+        resp = Api(hit_videos[0].get('backup_url')[0]).headers(bilibili_common.get_headers()).verify(False).send().get_resp()
     final_video_path = f'{tempfile.gettempdir()}/{bvid}_{title}.mp4'
     tfu.download_with_progress(resp, final_video_path)
     audios = video_info.get('data').get('dash').get('audio')
@@ -104,7 +104,7 @@ def download_video(bvid=None, avid=None, cid=None, qn=None):
     for audio in audios:
         if not best_audio or best_audio.get('id') < audio.get('id'):
             best_audio = audio
-    audio_resp = Api(best_audio.get('backup_url')[0]).headers(bilibili_common.get_headers()).send().get_resp()
+    audio_resp = Api(best_audio.get('backup_url')[0]).headers(bilibili_common.get_headers()).verify(False).send().get_resp()
     final_audio_path = f'{tempfile.gettempdir()}/{bvid}_{title}.mp3'
     tfu.download_with_progress(audio_resp, final_audio_path)
     ffmpeg_util.combine_video(final_video_path, final_audio_path, conf_util.get_bilibili_conf("bilibili_video_path"))
@@ -117,10 +117,10 @@ def download_video_for_web(bvid=None, avid=None, cid=None, qn=None, title=None):
     videos = video_info.get('data').get('dash').get('video')
     hit_videos = list(filter(lambda x: x.get('id') == int(qn), videos))
     if len(hit_videos) < 1:
-        resp = Api(videos[0].get('backup_url')[0]).headers(bilibili_common.get_headers()).stream(True).send().get_resp()
+        resp = Api(videos[0].get('backup_url')[0]).headers(bilibili_common.get_headers()).stream(True).verify(False).send().get_resp()
     else:
         resp = Api(hit_videos[0].get('backup_url')[0]).headers(bilibili_common.get_headers()).stream(
-            True).send().get_resp()
+            True).verify(False).send().get_resp()
     final_video_path = f'{tempfile.gettempdir()}/{bvid}_{title}.mp4'
     video_save_path = None
     audio_save_path = None
@@ -137,7 +137,7 @@ def download_video_for_web(bvid=None, avid=None, cid=None, qn=None, title=None):
             best_audio = audio
     yield EventMessage(EventType.STRING, '正在下载音频')
     audio_resp = Api(best_audio.get('backup_url')[0]).headers(bilibili_common.get_headers()).stream(
-        True).send().get_resp()
+        True).verify(False).send().get_resp()
     final_audio_path = f'{tempfile.gettempdir()}/{bvid}_{title}.mp3'
     for chunk_event in tfu.download_with_progress_for_web(audio_resp, final_audio_path):
         if chunk_event.message_type == EventType.PERCENTAGE:
@@ -154,7 +154,7 @@ def login_qrcode_poll(qrcode_key):
     poll_resp = Api(
         f'https://passport.bilibili.com/x/passport-login/web/qrcode/poll?qrcode_key={qrcode_key}') \
         .headers(headers) \
-        .send().get_resp()
+        .verify(False).send().get_resp()
     poll_json = poll_resp.json()
     vmid = ''
     if poll_json.get('data').get('code') == 0:
@@ -183,7 +183,7 @@ def get_user_info(vmid):
     base_url = urlunparse(data)
     api_result = Api(base_url) \
         .headers(bilibili_common.get_headers()) \
-        .send()
+        .verify(False).send()
     return api_result.get_resp().json()
 
 
@@ -198,7 +198,7 @@ def get_user_card_info(vmid):
     base_url = urlunparse(data)
     api_result = Api(base_url) \
         .headers(bilibili_common.get_headers()) \
-        .send()
+        .verify(False).send()
     return api_result.get_resp().json()
 
 

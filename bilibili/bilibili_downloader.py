@@ -114,7 +114,7 @@ def get_detail_callback(resp, api_result):
 def get_avatar_data(url, small=False):
     if small:
         url = url + '@80w_80h_1c_1s.webp'
-    return Api(url).headers(bilibili_common.get_headers()).send().get_resp()
+    return Api(url).headers(bilibili_common.get_headers()).verify(False).send().get_resp()
 
 
 def get_cover_callback(resp, api_result):
@@ -206,7 +206,7 @@ def get_detail_json(url):
     对外提供
     """
     return Api(bilibili_common.format_url(url)).headers(bilibili_common.get_headers()).callback(
-        get_detail_callback).send().get_callback_result()
+        get_detail_callback).verify(False).send().get_callback_result()
 
 
 def get_detail(url):
@@ -215,7 +215,7 @@ def get_detail(url):
     对外提供
     """
     return Api(bilibili_common.format_url(url)).headers(bilibili_common.get_headers()).callback(
-        get_detail_callback).send()
+        get_detail_callback).verify(False).send()
 
 
 def get_cover_and_save(url):
@@ -225,7 +225,8 @@ def get_cover_and_save(url):
     """
     get_detail_api = Api(bilibili_common.format_url(url)).headers(bilibili_common.get_headers()).callback(
         get_detail_callback)
-    get_detail_api.then(Api(get_cover_url).headers(bilibili_common.get_headers()).callback(get_cover_callback)).send()
+    get_detail_api.then(Api(get_cover_url).headers(bilibili_common.get_headers())
+                        .callback(get_cover_callback)).verify(False).send()
 
 
 def get_cover(url):
@@ -234,8 +235,8 @@ def get_cover(url):
     对外提供
     """
     get_detail_api_result = Api(bilibili_common.format_url(url)).headers(bilibili_common.get_headers()).callback(
-        get_detail_callback).send()
-    img_result = Api(get_cover_url(get_detail_api_result)).headers(bilibili_common.get_headers()).send()
+        get_detail_callback).verify(False).send()
+    img_result = Api(get_cover_url(get_detail_api_result)).headers(bilibili_common.get_headers()).verify(False).send()
     return img_result.get_resp()
 
 
@@ -247,7 +248,7 @@ def get_followings(vmid, order='desc', order_type='', pn=1, ps=20):
     api_result = Api(f'/x/relation/followings?vmid={vmid}&order={order}&order_type={order_type}&pn={pn}&ps={ps}') \
         .env(bilibili_common.env_bilibili_api) \
         .headers(bilibili_common.get_headers()) \
-        .send()
+        .verify(False).send()
     return api_result.get_resp().json()
 
 
@@ -257,15 +258,15 @@ def analyze_video(url):
 
 
 def download_and_combine(video_detail, quality):
-    video_result = Api(get_video_url(video_detail, quality)).headers(bilibili_common.get_headers()).send()
+    video_result = Api(get_video_url(video_detail, quality)).headers(bilibili_common.get_headers()).verify(False).send()
     video_save_path = save_video(video_result.get_resp(), video_detail)
-    audio_result = Api(get_audio_url(video_detail)).headers(bilibili_common.get_headers()).send()
+    audio_result = Api(get_audio_url(video_detail)).headers(bilibili_common.get_headers()).verify(False).send()
     audio_save_path = save_audio(audio_result.get_resp(), video_detail)
     ffmpeg_util.combine_video(video_save_path, audio_save_path, conf_util.get_bilibili_conf("bilibili_video_path"))
 
 
 def download_and_combine_for_web(video_detail, quality):
-    video_result = Api(get_video_url(video_detail, quality)).headers(bilibili_common.get_headers()).stream(True).send()
+    video_result = Api(get_video_url(video_detail, quality)).headers(bilibili_common.get_headers()).stream(True).verify(False).send()
     video_save_path = None
     audio_save_path = None
     yield EventMessage(EventType.STRING, '正在下载视频')
@@ -275,7 +276,7 @@ def download_and_combine_for_web(video_detail, quality):
         elif result.message_type == EventType.OK:
             video_save_path = result.message
     yield EventMessage(EventType.STRING, '正在下载音频')
-    audio_result = Api(get_audio_url(video_detail)).headers(bilibili_common.get_headers()).stream(True).send()
+    audio_result = Api(get_audio_url(video_detail)).headers(bilibili_common.get_headers()).stream(True).verify(False).send()
     for result in save_audio_for_web(audio_result.get_resp(), video_detail):
         if result.message_type == EventType.PERCENTAGE:
             yield result
@@ -318,7 +319,7 @@ def download_video(url, p_codes=None, quality=None):
         for episode in episodes_for_download:
             logger.info(f'准备下载 {episode.get("title")}')
             sub_video_detail = Api(bilibili_common.format_url(url, p=episode.get('p'))).headers(
-                bilibili_common.get_headers()).callback(get_detail_callback).send()
+                bilibili_common.get_headers()).callback(get_detail_callback).verify(False).send()
             download_and_combine(sub_video_detail, quality)
     else:
         download_and_combine(video_detail, quality)
@@ -348,7 +349,7 @@ def download_video_for_web(url, p_codes, quality=None):
         for episode in episodes_for_download:
             logger.info(f'准备下载 {episode.get("title")}')
             sub_video_detail = Api(bilibili_common.format_url(url, p=episode.get('p'))).headers(
-                bilibili_common.get_headers()).callback(get_detail_callback).send()
+                bilibili_common.get_headers()).callback(get_detail_callback).verify(False).send()
             for download_event in download_and_combine_for_web(sub_video_detail, quality):
                 yield download_event
     else:
@@ -375,11 +376,11 @@ def download_video_stream(bvid=None, avid=None, cid=None, qn=None, filename=None
     query = urlencode(signed_params)
     data = ['https', 'api.bilibili.com', '/x/player/wbi/playurl', '', query, '']
     base_url = urlunparse(data)
-    url_resp_json = Api(base_url).headers(bilibili_common.get_base_headers()).send().get_resp().json()
+    url_resp_json = Api(base_url).headers(bilibili_common.get_base_headers()).verify(False).send().get_resp().json()
     if url_resp_json.get('data').get('dash'):
         video_url = url_resp_json.get('data').get('dash').get('video')[0].get('backup_url')[0]
     else:
         video_url = url_resp_json.get('data').get('durl')[0].get('backup_url')[0]
-    video_resp = Api(video_url).headers(bilibili_common.get_headers()).send().get_resp()
+    video_resp = Api(video_url).headers(bilibili_common.get_headers()).verify(False).send().get_resp()
     return video_resp
     # tfu.download_with_progress(video_resp, f'download/bilibili/video/{filename}')
