@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>工具集</title>
+  <title>bili-tool</title>
   <script>
     if (localStorage.getItem('theme')) {
       document.getElementsByTagName('html')[0].dataset.theme = localStorage.getItem('theme')
@@ -21,10 +21,15 @@
   <div id="app" v-cloak>
     <div class="max-w-3xl mx-auto px-16">
       <nav class="navbar p-0 w-full">
-        <h3 class=" mt-0 text-xl font-semibold leading-normal">
+        <h3 class="mt-0 text-xl font-semibold leading-normal">
           首页
         </h3>
-        <label class="flex cursor-pointer gap-2 ml-auto">
+        <div class="flex cursor-pointer gap-2 ml-auto">
+          <h3 class="mt-0 text-xl font-semibold leading-normal" @click="toSettings">
+            设置
+          </h3>
+        </div>
+        <label class="flex cursor-pointer gap-2 ml-5">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="5" />
@@ -71,7 +76,7 @@
   </div>
 </body>
 <script>
-  var appIns = new Vue({
+  var app = new Vue({
     el: '#app',
     data: {
       userinfo: {},
@@ -149,7 +154,7 @@
       }
       axios.get('/bilibili/user/current')
         .then(response => {
-          appIns.vmid = response.data
+          app.vmid = response.data
         })
         .catch(error => {
 
@@ -159,6 +164,9 @@
 
     },
     methods: {
+      toSettings: function () {
+        location.href = '/settings'
+      },
       toLogin: function () {
         location.href = '/bilibili/api/login/view'
       },
@@ -174,7 +182,7 @@
       vmid: function () {
         axios.get('/bilibili/info/user/' + this.vmid)
           .then(response => {
-            appIns.userinfo = response.data
+            app.userinfo = response.data
           })
           .catch(error => {
 

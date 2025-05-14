@@ -5,6 +5,7 @@ import types
 import webview
 from config.logger_config import get_logger
 from flask import Flask, render_template, request, send_file, make_response, send_from_directory, Response
+from utils.conf_util import get_bilibili_conf, set_bilibili_conf
 
 from utils import conf_util
 
@@ -26,6 +27,11 @@ def favicon():
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/settings")
+def page_settings():
+    return render_template("settings.html")
 
 
 @app.route("/bilibili/download/cover/view")
@@ -290,6 +296,32 @@ def set_current_theme(theme):
     except Exception:
         pass
     return 'ok'
+
+
+@app.route("/settings/data", methods=['GET'])
+def get_settings_data():
+    return {
+        'bilibili': {
+            'file_storage': {
+                'video_path': get_bilibili_conf('bilibili_video_path'),
+                'img_path': get_bilibili_conf('bilibili_image_path')
+            }
+        }
+    }
+
+
+@app.route("/settings/data", methods=['POST'])
+def set_settings_data():
+    try:
+        settings = request.get_json()
+        bilibili_video_path = settings.get('bilibili').get('file_storage').get('video_path')
+        set_bilibili_conf('bilibili_video_path', bilibili_video_path)
+        bilibili_image_path = settings.get('bilibili').get('file_storage').get('img_path')
+        set_bilibili_conf('bilibili_image_path', bilibili_image_path)
+        return 'ok'
+    except Exception as e:
+        logger.error(e)
+        return '保存失败', 500
 
 
 def start_server():

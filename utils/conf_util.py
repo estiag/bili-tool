@@ -31,7 +31,7 @@ def get_ffmpeg_conf(key):
 def get_bilibili_conf(key):
     bilibili_conf = config_system.get('bilibili', key, raw=True)
     if key == 'bilibili_video_path' or key == 'bilibili_image_path':
-        if bilibili_conf.startswith('/'):
+        if os.path.isabs(bilibili_conf):
             return bilibili_conf
         else:
             return f'{project_dir}/{bilibili_conf}'

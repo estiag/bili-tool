@@ -174,20 +174,20 @@
             analyzing: false,
         },
         mounted:function(){
-            var appIns = this
-            appIns.vmid = new URLSearchParams(new URL(location.href).search).get('vmid') || ''
-            if(appIns.vmid){
-                appIns.search()
+            var app = this
+            app.vmid = new URLSearchParams(new URL(location.href).search).get('vmid') || ''
+            if(app.vmid){
+                app.search()
             }else{
                axios.get('/bilibili/user/current')
                     .then(response => {
-                        appIns.vmid = response.data
-                        appIns.search()
+                        app.vmid = response.data
+                        app.search()
                     })
                     .catch(error => {
-                        appIns.$refs.child.visible=true
-                        appIns.$refs.child.message=error.response.data
-                        setTimeout(function(){appIns.$refs.child.visible=false},2000)
+                        app.$refs.child.visible=true
+                        app.$refs.child.message=error.response.data
+                        setTimeout(function(){ app.$refs.child.visible=false},2000)
                     });
             }
         },
