@@ -6,12 +6,14 @@ bilibili媒体下载工具，Windows用户可直接下载最新发行版本使�
 - 视频下载
 - 封面下载
 - 关注列表
+- 预览下载的文件
 - 支持交互式命令方式和http服务器方式使用
-- 可以打包成windows可执行文件使用
+- 支持打包成windows可执行文件使用
 
 ## 使用方式
 - 若直接使用发布版本，直接下载后解压运行bilitool.exe即可。
 - 若要以下方式运行，或有修改代码需要，请安装python运行环境，并且安装依赖`pip install -r requirements.txt`
+
 ### 交互式命令
 直接运行[bilitool-console.py](bilitool-console.py)，按照提示操作即可
 - 需要python运行环境
@@ -38,6 +40,8 @@ bilibili媒体下载工具，Windows用户可直接下载最新发行版本使�
 - daisyui: 对tailwindcss的封装
 - pywebview: 跨平台的桌面应用框架
 - pyinstaller: 制作exe文件
+- rivulet: 一个链式http处理库 https://gitee.com/estiag/rivulet.git
+
 ### 免责声明
 1. 版权声明‌
 本工具仅供个人学习、研究和合法用途使用。下载的视频、音频等内容版权归哔哩哔哩（Bilibili）及原作者所有。
