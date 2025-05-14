@@ -1,15 +1,18 @@
-### 介绍
+## 介绍
 bilibili媒体下载工具，Windows用户可直接下载最新发行版本使用。解压后运行bilitool.exe即可。
 默认媒体保存位置在`_internal/download/bilibili/video`，此位置可以在设置页面修改
 
-### 功能
+## 功能
 - 视频下载
 - 封面下载
 - 关注列表
 - 支持交互式命令方式和http服务器方式使用
 - 可以打包成windows可执行文件使用
 
-#### 交互式命令使用
+## 使用方式
+- 若直接使用发布版本，直接下载后解压运行bilitool.exe即可。
+- 若要以下方式运行，或有修改代码需要，请安装python运行环境，并且安装依赖`pip install -r requirements.txt`
+### 交互式命令
 直接运行[bilitool-console.py](bilitool-console.py)，按照提示操作即可
 - 需要python运行环境
 - 首次运行需要下载ffmpeg(自动完成)

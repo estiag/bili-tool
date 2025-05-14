@@ -58,7 +58,7 @@ def get_login_qrimg():
     # 生成二维码图像
     img = qr.make_image(fill_color="black", back_color="white")
     buffer = io.BytesIO()
-    img.save(buffer, format="PNG")  # 保存为 PNG 格式
+    img.save(buffer)  # 保存为 PNG 格式
     binary_data = buffer.getvalue()  # 获取二进制数据
     buffer.close()
     base64_str = base64.b64encode(binary_data).decode('utf-8')
