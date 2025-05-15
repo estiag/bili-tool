@@ -11,157 +11,177 @@
 
     </script>
     <script src="{{ url_for('static', filename='js/vue.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/right-menu.js')}}"></script>
     <script src="{{ url_for('static', filename='js/alert.js') }}"></script>
     <script src="{{ url_for('static', filename='js/tailwindcss.3.4.16.js') }}"></script>
-    <link href="{{ url_for('static', filename='css/daisyui@4.12.23.css') }}" rel="stylesheet" type="text/css"/>
+    <link href="{{ url_for('static', filename='css/daisyui@4.12.23.css') }}" rel="stylesheet" type="text/css" />
     <script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
 </head>
 
 <body>
-<div id="app" v-cloak>
-    <div class="max-w-3xl mx-auto">
-          <nav class="navbar p-0 w-full">
-            <h3 class=" mt-0 text-xl font-semibold leading-normal">
-                <a href="/">首页</a>->用户信息
-            </h3>
-          </nav>
+    <div id="app" v-cloak>
+        {% if webview_mode %}
+        <right-menu></right-menu>
+        {% endif %}
+        <div class="max-w-3xl mx-auto">
+            <nav class="navbar p-0 w-full">
+                <div class="breadcrumbs text-sm">
+                    <ul>
+                        <li><a href="/">首页</a></li>
+                        <li>用户信息</li>
+                    </ul>
+                </div>
+            </nav>
         </div>
 
-    <div class="max-w-3xl mx-auto pb-6 text-center transition-all" :class="{'m-[20vh]':!userinfo}">
-       <tips ref="child"></tips>
-        <div class="join">
-            <input v-model="vmid" class="input input-bordered join-item rounded-l-full" placeholder="vmid"
-                   @keyup.enter="search"/>
-            <button class="btn btn-accent join-item rounded-r-full" :class="{'btn-disabled':!vmid}" @click="search">查询
-            </button>
-        </div>
-    </div>
-    <div v-if="userinfo">
-        <div class="max-w-3xl mx-auto">
-            <div class="grid grid-flow-col grid-cols-3 gap-4">
-                <div class="flex">
-                    <div class="avatar">
-                        <div class="w-20 rounded">
-                            <img :src="userinfo.face"/>
-                        </div>
-                    </div>
-                    <div class="flex flex-col truncate">
-                        <p class="pl-2 text-2xl font-bold truncate" v-text="userinfo.name"
-                           :title="userinfo.uname"></p>
-                        <div class="flex pl-2 pl-2 text-xs">
-                            用户ID: <p class="pl-2 text-xs truncate" v-text="userinfo.mid"
-                                       :title="userinfo.mid"></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex flex-col">
-                    <div class="stat-title">粉丝数</div>
-                    <div class="stat-value text-primary" v-text="cardinfo.follower"></div>
-                </div>
-                <div class="flex flex-col">
-                    <div class="stat-title">点赞数</div>
-                    <div class="stat-value text-secondary" v-text="cardinfo.like_num"></div>
-                </div>
+        <div class="max-w-3xl mx-auto pb-6 text-center transition-all" :class="{'m-[20vh]':!userinfo}">
+            <tips ref="child"></tips>
+            <div class="join">
+                <input v-model="vmid" class="input input-bordered join-item rounded-l-full" placeholder="vmid"
+                    @keyup.enter="search" />
+                <button class="btn btn-accent join-item rounded-r-full" :class="{'btn-disabled':!vmid}"
+                    @click="search">查询
+                </button>
             </div>
         </div>
-        <div class="max-w-3xl mx-auto">
-            <div class="divider divider-accent">基本信息</div>
-            <div class="grid grid-cols-3 gap-4">
-                <div>性别: <span v-text="userinfo.sex"></span></div>
-                <div>签名: <span v-text="userinfo.sign"></span></div>
-                <div>用户权限等级: <span v-text="fmtRank(userinfo.rank)"></span></div>
-                <div>硬币数: <span v-text="userinfo.coins"></span></div>
-                <div>是否关注此用户: <span v-text="fmtBool(userinfo.is_followed)"></span></div>
-                <div>封禁状态: <span v-text="fmtSilence(userinfo.silence)"></span></div>
-                <div>是否粉丝勋章: <span v-text="fmtBool(userinfo.fans_badge)"></span></div>
-                <div>生日: <span v-text="userinfo.birthday"></span></div>
-                <div v-if="userinfo.school">学校: <span v-text="userinfo.school.name"></span></div>
-                <div v-if="userinfo.profession">专业资质信息:<span v-text="userinfo.profession.title"></span><span
-                        v-text="userinfo.profession.department"></span></div>
-                <div>个人标签:<span v-text="userinfo.tags"></span></div>
-                <div>是否为硬核会员:<span v-text="fmtOneZero(userinfo.is_senior_member)"></span></div>
-                <div>是否为NFT头像:<span v-text="fmtOneZero(userinfo.face_nft)"></span></div>
+        <div v-if="userinfo">
+            <div class="max-w-3xl mx-auto">
+                <div class="grid grid-flow-col grid-cols-3 gap-4">
+                    <div class="flex">
+                        <div class="avatar">
+                            <div class="w-20 rounded">
+                                <img :src="userinfo.face" />
+                            </div>
+                        </div>
+                        <div class="flex flex-col truncate">
+                            <p class="pl-2 text-2xl font-bold truncate" v-text="userinfo.name" :title="userinfo.uname">
+                            </p>
+                            <div class="flex pl-2 pl-2 text-xs">
+                                用户ID: <p class="pl-2 text-xs truncate" v-text="userinfo.mid" :title="userinfo.mid"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="stat-title">粉丝数</div>
+                        <div class="stat-value text-primary" v-text="cardinfo.follower"></div>
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="stat-title">点赞数</div>
+                        <div class="stat-value text-secondary" v-text="cardinfo.like_num"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="max-w-3xl mx-auto">
+                <div class="divider divider-accent">基本信息</div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>性别: <span v-text="userinfo.sex"></span></div>
+                    <div>签名: <span v-text="userinfo.sign"></span></div>
+                    <div>用户权限等级: <span v-text="fmtRank(userinfo.rank)"></span></div>
+                    <div>硬币数: <span v-text="userinfo.coins"></span></div>
+                    <div>是否关注此用户: <span v-text="fmtBool(userinfo.is_followed)"></span></div>
+                    <div>封禁状态: <span v-text="fmtSilence(userinfo.silence)"></span></div>
+                    <div>是否粉丝勋章: <span v-text="fmtBool(userinfo.fans_badge)"></span></div>
+                    <div>生日: <span v-text="userinfo.birthday"></span></div>
+                    <div v-if="userinfo.school">学校: <span v-text="userinfo.school.name"></span></div>
+                    <div v-if="userinfo.profession">专业资质信息:<span v-text="userinfo.profession.title"></span><span
+                            v-text="userinfo.profession.department"></span></div>
+                    <div>个人标签:<span v-text="userinfo.tags"></span></div>
+                    <div>是否为硬核会员:<span v-text="fmtOneZero(userinfo.is_senior_member)"></span></div>
+                    <div>是否为NFT头像:<span v-text="fmtOneZero(userinfo.face_nft)"></span></div>
 
-            </div>
-        </div>
-        <div class="max-w-3xl mx-auto">
-            <div class="divider divider-accent">直播间状态</div>
-            <div class="grid grid-cols-3 gap-4" v-if="userinfo.live_room">
-                <div>直播间状态: <span v-text="fmtRoomStatus(userinfo.live_room.roomStatus)"></span></div>
-                <div>直播状态: <span v-text="fmtLiveStatus(userinfo.live_room.liveStatus)"></span></div>
-                <div class="truncate">直播间网页 url: <span :title="userinfo.live_room.url"
-                                                            v-text="userinfo.live_room.url"></span></div>
-                <div class="truncate">直播间封面 url: <span :title="userinfo.live_room.cover"
-                                                            v-text="userinfo.live_room.cover"></span></div>
-                <div>直播间 id: <span v-text="userinfo.live_room.roomid"></span></div>
-                <div>轮播状态: <span v-text="fmtRoundStatus(userinfo.live_room.roundStatus)"></span></div>
-                <div v-if="userinfo.live_room.watched_show">
-                    <div>观看人数: <span v-text="userinfo.live_room.watched_show.num"></span></div>
                 </div>
             </div>
-        </div>
-        <div class="max-w-3xl mx-auto">
-            <div class="divider divider-accent">会员信息</div>
-            <div class="grid grid-cols-3 gap-4" v-if="userinfo.vip">
-                <div>会员类型: <span v-text="fmtVipType(userinfo.vip.type)"></span></div>
-                <div>会员状态: <span v-text="fmtOneZero(userinfo.vip.status)"></span></div>
-                <div>会员过期时间: <span v-text="fmtTime(userinfo.vip.due_date)"></span></div>
-                <div>支付类型: <span v-text="fmtVipPayType(userinfo.vip.vip_pay_type)"></span></div>
-                <div>是否显示会员图标: <span v-text="fmtOneZero(userinfo.vip.avatar_subscript)"></span></div>
-                <div>会员昵称颜色: <span v-text="userinfo.vip.nickname_color"></span></div>
-                <div>大类型: <span v-text="fmtVipType(userinfo.vip.role)"></span></div>
-                <div>大会员角标地址: <span v-text="userinfo.vip.avatar_subscript_url"></span></div>
-                <div>电视大会员状态: <span v-text="fmtOneZero(userinfo.vip.tv_vip_status)"></span></div>
-                <div>电视大会员支付类型: <span v-text="fmtVipPayType(userinfo.vip.tv_vip_pay_type)"></span></div>
-                <div v-if="userinfo.vip.label">标签类型: <span v-text="userinfo.vip.label.text"></span></div>
-                <div v-if="userinfo.vip.label">会员标签: <span v-text="userinfo.vip.label.label_theme"></span></div>
-                <div v-if="userinfo.vip.label">标签颜色: <span v-text="userinfo.vip.label.text_color"></span></div>
-                <div v-if="userinfo.vip.label">会员标签背景颜色: <span v-text="userinfo.vip.label.bg_color"></span>
-                </div>
-                <div v-if="userinfo.vip.label">会员标签边框颜色: <span v-text="userinfo.vip.label.border_color"></span>
+            <div class="max-w-3xl mx-auto">
+                <div class="divider divider-accent">直播间状态</div>
+                <div class="grid grid-cols-3 gap-4" v-if="userinfo.live_room">
+                    <div>直播间状态: <span v-text="fmtRoomStatus(userinfo.live_room.roomStatus)"></span></div>
+                    <div>直播状态: <span v-text="fmtLiveStatus(userinfo.live_room.liveStatus)"></span></div>
+                    <div class="truncate">直播间网页 url: <span :title="userinfo.live_room.url"
+                            v-text="userinfo.live_room.url"></span></div>
+                    <div class="truncate">直播间封面 url: <span :title="userinfo.live_room.cover"
+                            v-text="userinfo.live_room.cover"></span></div>
+                    <div>直播间 id: <span v-text="userinfo.live_room.roomid"></span></div>
+                    <div>轮播状态: <span v-text="fmtRoundStatus(userinfo.live_room.roundStatus)"></span></div>
+                    <div v-if="userinfo.live_room.watched_show">
+                        <div>观看人数: <span v-text="userinfo.live_room.watched_show.num"></span></div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="max-w-3xl mx-auto" v-if="userinfo.fans_medal">
-            <div class="divider divider-accent">粉丝勋章</div>
-            <div class="grid grid-cols-3 gap-4">
-                <div>是否佩戴了粉丝勋章: <span v-text="userinfo.fans_medal.wear"></span></div>
-                <div v-if="userinfo.fans_medal.medal">粉丝勋章所属UP的mid: <span v-text="userinfo.fans_medal.medal.target_id"></span></div>
-                <div v-if="userinfo.fans_medal.medal">粉丝勋章id: <span v-text="userinfo.fans_medal.medal.medal_id"></span></div>
-                <div v-if="userinfo.fans_medal.medal">粉丝勋章等级: <span v-text="userinfo.fans_medal.medal.level"></span></div>
-                <div v-if="userinfo.fans_medal.medal">粉丝勋章名称: <span v-text="userinfo.fans_medal.medal.medal_name"></span></div>
-                <div v-if="userinfo.fans_medal.medal">颜色: <span v-text="userinfo.fans_medal.medal.medal_color"></span></div>
-                <div v-if="userinfo.fans_medal.medal">当前亲密度: <span v-text="userinfo.fans_medal.medal.intimacy"></span></div>
-                <div v-if="userinfo.fans_medal.medal">下一等级所需亲密度: <span v-text="userinfo.fans_medal.medal.next_intimacy"></span></div>
-                <div v-if="userinfo.fans_medal.medal">每日亲密度获取上限: <span v-text="userinfo.fans_medal.medal.day_limit"></span></div>
-                <div v-if="userinfo.fans_medal.medal">今日已获得亲密度: <span v-text="userinfo.fans_medal.medal.today_feed"></span></div>
-                <div v-if="userinfo.fans_medal.medal">粉丝勋章颜色: <span v-text="userinfo.fans_medal.medal.medal_color_start"></span></div>
-                <div v-if="userinfo.fans_medal.medal">粉丝勋章颜色: <span v-text="userinfo.fans_medal.medal.medal_color_end"></span></div>
-                <div v-if="userinfo.fans_medal.medal">粉丝勋章边框颜色: <span v-text="userinfo.fans_medal.medal.medal_color_border"></span></div>
-                <div v-if="userinfo.fans_medal.medal">当前是否佩戴: <span v-text="userinfo.fans_medal.medal.wearing_status"></span></div>
+            <div class="max-w-3xl mx-auto">
+                <div class="divider divider-accent">会员信息</div>
+                <div class="grid grid-cols-3 gap-4" v-if="userinfo.vip">
+                    <div>会员类型: <span v-text="fmtVipType(userinfo.vip.type)"></span></div>
+                    <div>会员状态: <span v-text="fmtOneZero(userinfo.vip.status)"></span></div>
+                    <div>会员过期时间: <span v-text="fmtTime(userinfo.vip.due_date)"></span></div>
+                    <div>支付类型: <span v-text="fmtVipPayType(userinfo.vip.vip_pay_type)"></span></div>
+                    <div>是否显示会员图标: <span v-text="fmtOneZero(userinfo.vip.avatar_subscript)"></span></div>
+                    <div>会员昵称颜色: <span v-text="userinfo.vip.nickname_color"></span></div>
+                    <div>大类型: <span v-text="fmtVipType(userinfo.vip.role)"></span></div>
+                    <div>大会员角标地址: <span v-text="userinfo.vip.avatar_subscript_url"></span></div>
+                    <div>电视大会员状态: <span v-text="fmtOneZero(userinfo.vip.tv_vip_status)"></span></div>
+                    <div>电视大会员支付类型: <span v-text="fmtVipPayType(userinfo.vip.tv_vip_pay_type)"></span></div>
+                    <div v-if="userinfo.vip.label">标签类型: <span v-text="userinfo.vip.label.text"></span></div>
+                    <div v-if="userinfo.vip.label">会员标签: <span v-text="userinfo.vip.label.label_theme"></span></div>
+                    <div v-if="userinfo.vip.label">标签颜色: <span v-text="userinfo.vip.label.text_color"></span></div>
+                    <div v-if="userinfo.vip.label">会员标签背景颜色: <span v-text="userinfo.vip.label.bg_color"></span>
+                    </div>
+                    <div v-if="userinfo.vip.label">会员标签边框颜色: <span v-text="userinfo.vip.label.border_color"></span>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="max-w-3xl mx-auto" v-if="userinfo.sys_notice">
-            <div class="divider divider-accent">系统提示</div>
-            <div class="grid grid-cols-3 gap-4">
-                <div>id: <span v-text="userinfo.sys_notice.id"></span></div>
-                <div>显示文案: <span v-text="userinfo.sys_notice.content"></span></div>
-                <div>提示类型: <span v-text="userinfo.sys_notice.notice_type"></span></div>
-                <div>文字颜色: <span v-text="userinfo.sys_notice.text_color"></span></div>
-                <div>背景颜色: <span v-text="userinfo.sys_notice.bg_color"></span></div>
+            <div class="max-w-3xl mx-auto" v-if="userinfo.fans_medal">
+                <div class="divider divider-accent">粉丝勋章</div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>是否佩戴了粉丝勋章: <span v-text="userinfo.fans_medal.wear"></span></div>
+                    <div v-if="userinfo.fans_medal.medal">粉丝勋章所属UP的mid: <span
+                            v-text="userinfo.fans_medal.medal.target_id"></span></div>
+                    <div v-if="userinfo.fans_medal.medal">粉丝勋章id: <span
+                            v-text="userinfo.fans_medal.medal.medal_id"></span></div>
+                    <div v-if="userinfo.fans_medal.medal">粉丝勋章等级: <span v-text="userinfo.fans_medal.medal.level"></span>
+                    </div>
+                    <div v-if="userinfo.fans_medal.medal">粉丝勋章名称: <span
+                            v-text="userinfo.fans_medal.medal.medal_name"></span></div>
+                    <div v-if="userinfo.fans_medal.medal">颜色: <span
+                            v-text="userinfo.fans_medal.medal.medal_color"></span></div>
+                    <div v-if="userinfo.fans_medal.medal">当前亲密度: <span
+                            v-text="userinfo.fans_medal.medal.intimacy"></span></div>
+                    <div v-if="userinfo.fans_medal.medal">下一等级所需亲密度: <span
+                            v-text="userinfo.fans_medal.medal.next_intimacy"></span></div>
+                    <div v-if="userinfo.fans_medal.medal">每日亲密度获取上限: <span
+                            v-text="userinfo.fans_medal.medal.day_limit"></span></div>
+                    <div v-if="userinfo.fans_medal.medal">今日已获得亲密度: <span
+                            v-text="userinfo.fans_medal.medal.today_feed"></span></div>
+                    <div v-if="userinfo.fans_medal.medal">粉丝勋章颜色: <span
+                            v-text="userinfo.fans_medal.medal.medal_color_start"></span></div>
+                    <div v-if="userinfo.fans_medal.medal">粉丝勋章颜色: <span
+                            v-text="userinfo.fans_medal.medal.medal_color_end"></span></div>
+                    <div v-if="userinfo.fans_medal.medal">粉丝勋章边框颜色: <span
+                            v-text="userinfo.fans_medal.medal.medal_color_border"></span></div>
+                    <div v-if="userinfo.fans_medal.medal">当前是否佩戴: <span
+                            v-text="userinfo.fans_medal.medal.wearing_status"></span></div>
+                </div>
             </div>
-        </div>
-        <div class="max-w-3xl mx-auto" v-if="userinfo.nameplate">
-            <div class="divider divider-accent">勋章</div>
-            <div class="grid grid-cols-3 gap-4">
-                <div>勋章id: <span v-text="userinfo.nameplate.nid"></span></div>
-                <div>勋章名称: <span v-text="userinfo.nameplate.name"></span></div>
-                <div>勋章等级: <span v-text="userinfo.nameplate.level"></span></div>
-                <div>获取条件: <span v-text="userinfo.nameplate.condition"></span></div>
+            <div class="max-w-3xl mx-auto" v-if="userinfo.sys_notice">
+                <div class="divider divider-accent">系统提示</div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>id: <span v-text="userinfo.sys_notice.id"></span></div>
+                    <div>显示文案: <span v-text="userinfo.sys_notice.content"></span></div>
+                    <div>提示类型: <span v-text="userinfo.sys_notice.notice_type"></span></div>
+                    <div>文字颜色: <span v-text="userinfo.sys_notice.text_color"></span></div>
+                    <div>背景颜色: <span v-text="userinfo.sys_notice.bg_color"></span></div>
+                </div>
+            </div>
+            <div class="max-w-3xl mx-auto" v-if="userinfo.nameplate">
+                <div class="divider divider-accent">勋章</div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>勋章id: <span v-text="userinfo.nameplate.nid"></span></div>
+                    <div>勋章名称: <span v-text="userinfo.nameplate.name"></span></div>
+                    <div>勋章等级: <span v-text="userinfo.nameplate.level"></span></div>
+                    <div>获取条件: <span v-text="userinfo.nameplate.condition"></span></div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 </body>
 
 <script>
@@ -173,36 +193,36 @@
             cardinfo: '',
             analyzing: false,
         },
-        mounted:function(){
+        mounted: function () {
             var app = this
             app.vmid = new URLSearchParams(new URL(location.href).search).get('vmid') || ''
-            if(app.vmid){
+            if (app.vmid) {
                 app.search()
-            }else{
-               axios.get('/bilibili/user/current')
+            } else {
+                axios.get('/bilibili/user/current')
                     .then(response => {
                         app.vmid = response.data
                         app.search()
                     })
                     .catch(error => {
-                        app.$refs.child.visible=true
-                        app.$refs.child.message=error.response.data
-                        setTimeout(function(){ app.$refs.child.visible=false},2000)
+                        app.$refs.child.visible = true
+                        app.$refs.child.message = error.response.data
+                        setTimeout(function () { app.$refs.child.visible = false }, 2000)
                     });
             }
         },
         methods: {
-            fmtVipPayType:function(id){
-                switch(id){
+            fmtVipPayType: function (id) {
+                switch (id) {
                     case 0:
                         return '未支付'
                     case 1:
                         return '已支付'
                     default:
                         return '未知'
-               }
+                }
             },
-            fmtTime(timeMill){
+            fmtTime(timeMill) {
                 const date = new Date(timeMill);
                 // 获取年、月、日、时、分、秒
                 const year = date.getFullYear();
@@ -214,8 +234,8 @@
                 // 格式化为字符串
                 const formattedTime = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             },
-            fmtVipType:function(id){
-                switch(id){
+            fmtVipType: function (id) {
+                switch (id) {
                     case 0:
                         return '无'
                     case 1:
@@ -230,52 +250,52 @@
                         return '百年大会员'
                     default:
                         return '未知'
-               }
+                }
             },
-            fmtRoundStatus:function(id){
-                if(id==1){
+            fmtRoundStatus: function (id) {
+                if (id == 1) {
                     return '轮播'
-                }else{
+                } else {
                     return '未轮播'
                 }
             },
-            fmtLiveStatus:function(id){
-                if(id==1){
+            fmtLiveStatus: function (id) {
+                if (id == 1) {
                     return '直播中'
-                }else{
+                } else {
                     return '未开播'
                 }
             },
-            fmtRoomStatus:function(id){
-                if(id==1){
+            fmtRoomStatus: function (id) {
+                if (id == 1) {
                     return '有房间'
-                }else{
+                } else {
                     return '无房间'
                 }
             },
-            fmtBool:function(id){
-                if(id){
+            fmtBool: function (id) {
+                if (id) {
                     return '是'
-                }else{
+                } else {
                     return '否'
                 }
             },
-            fmtOneZero:function(id){
-                if(id==1){
+            fmtOneZero: function (id) {
+                if (id == 1) {
                     return '是'
-                }else{
+                } else {
                     return '否'
                 }
             },
-            fmtSilence:function(id){
-                if(id==1){
+            fmtSilence: function (id) {
+                if (id == 1) {
                     return '被封'
-                }else{
+                } else {
                     return '正常'
                 }
             },
-            fmtRank:function(id){
-                switch(id){
+            fmtRank: function (id) {
+                switch (id) {
                     case 5000:
                         return '0级未答题'
                     case 10000:
@@ -290,7 +310,7 @@
                         return '管理员'
                     default:
                         return '未知'
-               }
+                }
             },
             search: function () {
                 if (!this.vmid || this.analyzing) {
@@ -299,24 +319,24 @@
                 axios.get('/bilibili/info/user/' + this.vmid)
                     .then(response => {
                         app.userinfo = response.data
-                        app.analyzing=false
+                        app.analyzing = false
                     })
                     .catch(error => {
-                        app.analyzing=false
-                        app.$refs.child.visible=true
-                        app.$refs.child.message=error.response.data
-                        setTimeout(function(){app.$refs.child.visible=false},2000)
+                        app.analyzing = false
+                        app.$refs.child.visible = true
+                        app.$refs.child.message = error.response.data
+                        setTimeout(function () { app.$refs.child.visible = false }, 2000)
                     });
                 axios.get('/bilibili/info/user/card/' + this.vmid)
                     .then(response => {
                         app.cardinfo = response.data
-                        app.analyzing=false
+                        app.analyzing = false
                     })
                     .catch(error => {
-                        app.analyzing=false
-                        app.$refs.child.visible=true
-                        app.$refs.child.message=error.response.data
-                        setTimeout(function(){app.$refs.child.visible=false},2000)
+                        app.analyzing = false
+                        app.$refs.child.visible = true
+                        app.$refs.child.message = error.response.data
+                        setTimeout(function () { app.$refs.child.visible = false }, 2000)
                     });
             }
         }

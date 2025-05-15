@@ -12,49 +12,56 @@
     </script>
     <script src="{{ url_for('static', filename='js/vue.js') }}"></script>
     <script src="{{ url_for('static', filename='js/alert.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/right-menu.js')}}"></script>
     <script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/tailwindcss.3.4.16.js') }}"></script>
-    <link href="{{ url_for('static', filename='css/daisyui@4.12.23.css') }}" rel="stylesheet" type="text/css"/>
+    <link href="{{ url_for('static', filename='css/daisyui@4.12.23.css') }}" rel="stylesheet" type="text/css" />
     <!--样式来自https://daisyui.com/-->
 </head>
 
 <body>
-<div id="app" v-cloak>
-    <div class="max-w-3xl mx-auto">
-        <nav class="navbar p-0 w-full">
-            <h3 class=" mt-0 text-xl font-semibold leading-normal">
-                <a href="/">首页</a>->下载封面
-            </h3>
-        </nav>
-    </div>
-    <div class="max-w-3xl mx-auto pb-6 text-center transition-all" :class="{'m-[20vh]':!cover_url}">
-        <tips ref="child"></tips>
-        <div class="join w-full">
-            <input v-model="url" class="input input-bordered w-full join-item rounded-l-full" placeholder="bvid或url"
-                   @keyup.enter="search"/>
-            <button class="btn btn-accent join-item rounded-r-full" :class="{'btn-disabled':!url}" @click="search">
-                获取
-            </button>
+    <div id="app" v-cloak>
+        {% if webview_mode %}
+        <right-menu></right-menu>
+        {% endif %}
+        <div class="max-w-3xl mx-auto">
+            <nav class="navbar p-0 w-full">
+                <div class="breadcrumbs text-sm">
+                    <ul>
+                        <li><a href="/">首页</a></li>
+                        <li>下载封面</li>
+                    </ul>
+                </div>
+            </nav>
         </div>
-    </div>
-    <dialog id="img_preview" class="modal">
-        <div class="modal-box max-w-5xl">
-            <form method="dialog">
-                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-            </form>
-            <h3 class="text-lg font-bold">图片预览</h3>
-            <img class="w-full" :src="cover_url"/>
-            <div class="modal-action">
-                <form method="dialog">
-                    <button class="btn btn-accent rounded-full" @click="save">
-                        <span class="loading loading-spinner" v-show="analyzing"></span>
-                        下载
-                    </button>
-                </form>
+        <div class="max-w-3xl mx-auto pb-6 text-center transition-all" :class="{'m-[20vh]':!cover_url}">
+            <tips ref="child"></tips>
+            <div class="join w-full">
+                <input v-model="url" class="input input-bordered w-full join-item rounded-l-full" placeholder="bvid或url"
+                    @keyup.enter="search" />
+                <button class="btn btn-accent join-item rounded-r-full" :class="{'btn-disabled':!url}" @click="search">
+                    获取
+                </button>
             </div>
         </div>
-    </dialog>
-</div>
+        <dialog id="img_preview" class="modal">
+            <div class="modal-box max-w-5xl">
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                </form>
+                <h3 class="text-lg font-bold">图片预览</h3>
+                <img class="w-full" :src="cover_url" />
+                <div class="modal-action">
+                    <form method="dialog">
+                        <button class="btn btn-accent rounded-full" @click="save">
+                            <span class="loading loading-spinner" v-show="analyzing"></span>
+                            下载
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </dialog>
+    </div>
 </body>
 <script>
     var app = new Vue({
@@ -78,23 +85,23 @@
                         app.analyzing = false
                     })
                     .catch(error => {
-                       app.$refs.child.visible=true
-                       app.$refs.child.message=error.response.data
-                       setTimeout(function(){app.$refs.child.visible=false},2000)
+                        app.$refs.child.visible = true
+                        app.$refs.child.message = error.response.data
+                        setTimeout(function () { app.$refs.child.visible = false }, 2000)
                     });
             },
-            save: function(){
+            save: function () {
                 app.analyzing = true
                 axios.get('/bilibili/cover/save?url=' + app.url)
-                .then(response => {
-                    app.analyzing = false
-                })
-                .catch(error => {
-                    app.analyzing = false
-                    app.$refs.child.visible=true
-                    app.$refs.child.message=error.response.data
-                    setTimeout(function(){app.$refs.child.visible=false},2000)
-                });
+                    .then(response => {
+                        app.analyzing = false
+                    })
+                    .catch(error => {
+                        app.analyzing = false
+                        app.$refs.child.visible = true
+                        app.$refs.child.message = error.response.data
+                        setTimeout(function () { app.$refs.child.visible = false }, 2000)
+                    });
             }
         }
     })

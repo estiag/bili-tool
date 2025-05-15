@@ -14,6 +14,7 @@
     </script>
     <script src="{{ url_for('static', filename='js/vue.js') }}"></script>
     <script src="{{ url_for('static', filename='js/alert.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/right-menu.js')}}"></script>
     <script src="{{ url_for('static', filename='js/tailwindcss.3.4.16.js') }}"></script>
     <link href="{{ url_for('static', filename='css/daisyui@4.12.23.css') }}" rel="stylesheet" type="text/css" />
     <script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
@@ -22,11 +23,17 @@
 
 <body>
     <div id="app" v-cloak>
+        {% if webview_mode %}
+        <right-menu></right-menu>
+        {% endif %}
         <div class="max-w-3xl mx-auto">
             <nav class="navbar p-0 w-full">
-                <h3 class=" mt-0 text-xl font-semibold leading-normal">
-                    <a href="/">首页</a>->下载视频
-                </h3>
+                <div class="breadcrumbs text-sm">
+                    <ul>
+                        <li><a href="/">首页</a></li>
+                        <li>下载视频</li>
+                    </ul>
+                </div>
             </nav>
         </div>
 
@@ -84,8 +91,7 @@
                         <div class="card-actions justify-end">
                             <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold"
                                 v-text="episode.download_message"></p>
-                            <select class=" select select-info select-sm  max-w-xs"
-                                >
+                            <select class=" select select-info select-sm  max-w-xs">
                                 <option disabled>选择清晰度</option>
                                 <option v-for="option in analyze_result.video_quality_option" v-text="option.name"
                                     :value="option.id"></option>
@@ -192,10 +198,10 @@
                     console.error('连接中断');
                     eventSource.close();
                     loadingElement.classList.add('hidden')
-					app.download_message = '下载失败'
-				};
+                    app.download_message = '下载失败'
+                };
                 eventSource.addEventListener('finish',
-                    function (event) {  
+                    function (event) {
                         eventSource.close()
                         loadingElement.classList.add('hidden')
                     });
@@ -224,7 +230,7 @@
                     app.progress = 0
                 }
                 for (var i = 0; i < p_codes_down.length; i++) {
-					var each_p_code = p_codes_down[i]
+                    var each_p_code = p_codes_down[i]
                     app.send_stream_request(each_p_code, quality, loadingElement)
                 }
 

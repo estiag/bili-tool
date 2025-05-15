@@ -18,6 +18,8 @@ import bilibili.bilibili_common as bilibili_common
 
 app = Flask(__name__)
 
+webview_mode = False
+
 
 @app.route('/favicon.ico')
 def favicon():
@@ -26,47 +28,62 @@ def favicon():
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    global webview_mode
+    return render_template("index.html", webview_mode=webview_mode)
 
 
 @app.route("/settings")
 def page_settings():
-    return render_template("settings.html")
+    global webview_mode
+    return render_template("settings.html", webview_mode=webview_mode)
 
 
 @app.route("/bilibili/download/cover/view")
 def page_bilibili_cover():
-    return render_template("bilibili/download_cover.html")
+    global webview_mode
+    return render_template("bilibili/download_cover.html", webview_mode=webview_mode)
 
 
 @app.route("/bilibili/download/video/view")
 def page_bilibili_video():
-    return render_template("bilibili/download_video.html")
+    global webview_mode
+    return render_template("bilibili/download_video.html", webview_mode=webview_mode)
 
 
 @app.route("/bilibili/info/followings/view")
 def page_bilibili_followings():
-    return render_template("bilibili/followings.html")
+    global webview_mode
+    return render_template("bilibili/followings.html", webview_mode=webview_mode)
 
 
 @app.route("/bilibili/api/download/video/view")
 def page_bilibili_video_api():
-    return render_template("bilibili/download_api_video.html")
+    global webview_mode
+    return render_template("bilibili/download_api_video.html", webview_mode=webview_mode)
 
 
 @app.route("/bilibili/info/user/view")
 def page_bilibili_user_info():
-    return render_template("bilibili/user_info.html")
+    global webview_mode
+    return render_template("bilibili/user_info.html", webview_mode=webview_mode)
 
 
 @app.route("/bilibili/video/downloaded/view")
 def page_bilibili_video_downloaded():
-    return render_template("bilibili/video_downloaded.html")
+    global webview_mode
+    return render_template("bilibili/video_downloaded.html", webview_mode=webview_mode)
 
 
 @app.route("/bilibili/img/downloaded/view")
 def page_bilibili_img_downloaded():
-    return render_template("bilibili/img_downloaded.html")
+    global webview_mode
+    return render_template("bilibili/img_downloaded.html", webview_mode=webview_mode)
+
+
+@app.route("/bilibili/api/login/view", methods=['GET'])
+def bilibili_api_login_view():
+    global webview_mode
+    return render_template("bilibili/login.html", webview_mode=webview_mode)
 
 
 @app.route("/bilibili/info/followings/<vmid>", methods=['POST'])
@@ -210,11 +227,6 @@ def download_bilibili_video_api_stream():
     )
 
 
-@app.route("/bilibili/api/login/view", methods=['GET'])
-def bilibili_api_login_view():
-    return render_template("bilibili/login.html")
-
-
 @app.route("/bilibili/api/qrimg", methods=['GET'])
 def bilibili_api_qrimg():
     return bili_api_down.get_login_qrimg()
@@ -344,4 +356,5 @@ if __name__ == "__main__":
     t.daemon = True  # 设置为守护线程
     t.start()
     # 启动webview
+    webview_mode = True
     start_webview()

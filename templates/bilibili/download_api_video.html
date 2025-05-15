@@ -11,6 +11,7 @@
     </script>
     <script src="{{ url_for('static', filename='js/vue.js') }}"></script>
     <script src="{{ url_for('static', filename='js/alert.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/right-menu.js')}}"></script>
     <script src="{{ url_for('static', filename='js/tailwindcss.3.4.16.js') }}"></script>
     <link href="{{ url_for('static', filename='css/daisyui@4.12.23.css') }}" rel="stylesheet" type="text/css" />
     <script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
@@ -19,14 +20,19 @@
 
 <body>
     <div id="app" v-cloak>
+        {% if webview_mode %}
+        <right-menu></right-menu>
+        {% endif %}
         <div class="max-w-3xl mx-auto">
             <nav class="navbar p-0 w-full">
-                <h3 class="mt-0 text-xl font-semibold leading-normal">
-                    <a href="/">首页</a>->下载视频(API方式)
-                </h3>
+                <div class="breadcrumbs text-sm">
+                    <ul>
+                        <li><a href="/">首页</a></li>
+                        <li>下载视频(API方式)</li>
+                    </ul>
+                </div>
             </nav>
         </div>
-
         <div class="max-w-3xl mx-auto pb-6 text-center transition-all" :class="{'m-[20vh]':!data}">
             <tips ref="child"></tips>
             <div class="join w-full">
