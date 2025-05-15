@@ -31,7 +31,7 @@
           </ul>
         </div>
         <div class="flex cursor-pointer gap-2 ml-auto">
-          <h3 class="mt-0 text-xl font-semibold leading-normal" @click="toSettings">
+          <h3 class="mt-0 text-sm hover:text-accent font-semibold leading-normal" @click="toSettings">
             设置
           </h3>
         </div>
@@ -54,8 +54,8 @@
       <tips ref="child"></tips>
       <div v-for="tool in tools">
         <div class="flex items-center">
-          <h3 class="text-lg font-medium inline-flex" v-text="tool.name"></h3>
-          <h3 class="text-lg font-medium inline-flex" v-if="tool.name == 'bilibili' && userinfo.name">
+          <h3 class="text-md font-medium inline-flex" v-text="tool.name"></h3>
+          <h3 class="text-md font-medium inline-flex" v-if="tool.name == 'bilibili' && userinfo.name">
             (已登录)</h3>
           <div v-if="tool.name == 'bilibili' && userinfo.name" class="ml-auto inline-flex items-center cursor-pointer"
             @click="toUserinfo">
@@ -67,12 +67,13 @@
             </div>
           </div>
           <div v-else class='inline-flex ml-auto'>
-            <h3 class="text-lg font-medium cursor-pointer" @click="toLogin">登录bilibili</h3>
+            <h3 class="text-md hover:text-accent font-medium cursor-pointer" @click="toLogin">登录bilibili</h3>
           </div>
         </div>
         <div class="justify-content-start w-100 mb-4 text-start">
           <div v-for="subTool in tool.subTools">
-            <a v-for="group in subTool" :href="group.href" v-text="group.name" type="button"
+            <span class="text-md" v-text="subTool.name+': '"></span>
+            <a v-for="group in subTool.groups" :href="group.href" v-text="group.name" type="button"
               class="btn mt-2 mr-2 btn-neutral rounded-full">
             </a>
           </div>
@@ -92,44 +93,53 @@
         {
           name: 'bilibili',
           subTools: [
-            [
-              {
-                name: '登录Bilibili',
-                href: '/bilibili/api/login/view'
-              },
-              {
-                name: '关注列表',
-                href: '/bilibili/info/followings/view'
-              },
-              {
-                name: '用户信息',
-                href: '/bilibili/info/user/view'
-              }
-            ],
-            [
-              {
-                name: '下载视频',
-                href: '/bilibili/download/video/view'
-              },
-              {
-                name: '下载视频(API方式)',
-                href: '/bilibili/api/download/video/view'
-              },
-              {
-                name: '下载视频封面',
-                href: '/bilibili/download/cover/view'
-              }
-            ],
-            [
-              {
-                name: '已下载视频',
-                href: '/bilibili/video/downloaded/view'
-              },
-              {
-                name: '已下载图片',
-                href: '/bilibili/img/downloaded/view'
-              }
-            ]
+            {
+              name: '用户',
+              groups: [
+                {
+                  name: '登录Bilibili',
+                  href: '/bilibili/api/login/view'
+                },
+                {
+                  name: '关注列表',
+                  href: '/bilibili/info/followings/view'
+                },
+                {
+                  name: '用户信息',
+                  href: '/bilibili/info/user/view'
+                }
+              ]
+            }, {
+              name: '下载',
+              groups:
+                [
+                  {
+                    name: '下载视频',
+                    href: '/bilibili/download/video/view'
+                  },
+                  {
+                    name: '下载视频(API方式)',
+                    href: '/bilibili/api/download/video/view'
+                  },
+                  {
+                    name: '下载视频封面',
+                    href: '/bilibili/download/cover/view'
+                  }
+                ]
+            }, {
+              name: '存储',
+              groups:
+                [
+                  {
+                    name: '已下载视频',
+                    href: '/bilibili/video/downloaded/view'
+                  },
+                  {
+                    name: '已下载图片',
+                    href: '/bilibili/img/downloaded/view'
+                  }
+                ]
+            }
           ]
         },
         /*{
