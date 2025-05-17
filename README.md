@@ -33,6 +33,9 @@ BiliTool 是一款功能强大的哔哩哔哩媒体下载工具，支持多种�
     默认下载路径：_internal/download/bilibili/video（可在设置中修改）
 
 ## 开发者模式
+### 注意
+Linux用户需额外安装FFmpeg `sudo apt install ffmpeg`
+MacOS用户需额外安装FFmpeg `brew install ffmpeg`, 如果没有homeBrew需要安装`/bin/zsh -c "$(curl -fsSL https://gitee.com/cunkai/HomebrewCN/raw/master/Homebrew.sh)"`
 
 ### 克隆仓库
 
@@ -53,8 +56,6 @@ pip install -r requirements.txt
 python bilitool-console.py
 ```
 
-    注意：Linux用户需额外安装FFmpeg
-    sudo apt install ffmpeg
 
 2. HTTP服务器模式
 
@@ -65,6 +66,7 @@ python bilitool-server.py
 访问 http://localhost:5000 使用网页界面
 
 # 打包Windows应用
+注意: 需要安装pyinstaller `pip install pyinstaller`
 
 1. 生成spec文件
    `pyi-makespec --add-data "config/*.conf:config" --add-data "static:static" --add-data "templates:templates" --add-data "download:download" --add-data "ffmpeg:ffmpeg" --icon=static/favicon.ico --windowed bilitool.py`
@@ -73,6 +75,8 @@ python bilitool-server.py
    `pyinstaller bilitool.spec`
 
 打包完成后，可在 dist 目录找到可执行文件。
+
+可以使用[build.bat](build.bat)(Windows)、 [build.sh](build.sh)(Linux/Mac) 打包，会自动清除不必要文件
 
 # 免责声明
 
@@ -107,3 +111,11 @@ python bilitool-server.py
 - pywebview: 跨平台的桌面应用框架
 - pyinstaller: 制作exe文件
 - rivulet: 一个链式http处理库 https://gitee.com/estiag/rivulet.git
+
+# 常见问题
+### MacOS找不到命令`pyi-makespec` `pyinstaller`
+需要安装pyinstaller后设置环境变量 ：执行`nano ~/.zshrc` 在文件末尾添加python的bin目录，执行`source ~/.zshrc`
+### pyinstaller制作可执行文件时报错：ERROR: Unable to find '/Users/estiag/bili-tool/download' when adding binary and data files.
+手动创建一个在项目根目录download目录
+### pyinstaller制作可执行文件时报错：ModuleNotFoundError: No module named 'PIL'
+安装 Pillow 库`pip install pillow`
