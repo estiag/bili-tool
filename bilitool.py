@@ -1,6 +1,7 @@
 import io
 import threading
-import types
+from multiprocessing import freeze_support
+
 
 import webview
 from config.logger_config import get_logger
@@ -352,6 +353,8 @@ def receive_message(event_action):
 
 
 if __name__ == "__main__":
+    # 防止MacOS的app模式无限启动新的窗口
+    freeze_support()
     t = threading.Thread(target=start_server)
     t.daemon = True  # 设置为守护线程
     t.start()
