@@ -11,7 +11,7 @@ while true; do
             rm ./config/user.conf
             rm ./ffmpeg/ffmpeg.exe
             mkdir download
-            pyi-makespec --add-data "config/*.conf:config" --add-data "static:static" --add-data "templates:templates" --add-data "download:download" --add-data "ffmpeg:ffmpeg" --icon=static/favicon.ico --windowed bilitool.py
+            pyi-makespec --add-data "config/*.conf:config" --add-data "static:static" --add-data "templates:templates" --add-data "download:download" --icon=static/favicon.ico --windowed bilitool.py
             pyinstaller bilitool.spec
             break
             ;;

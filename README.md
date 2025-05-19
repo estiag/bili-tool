@@ -119,3 +119,5 @@ python bilitool-server.py
 手动创建一个在项目根目录download目录
 ### pyinstaller制作可执行文件时报错：ModuleNotFoundError: No module named 'PIL'
 安装 Pillow 库`pip install pillow`
+### 出现无限调用main
+https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
