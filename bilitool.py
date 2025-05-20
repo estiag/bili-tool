@@ -338,7 +338,7 @@ def set_settings_data():
 
 
 def start_server():
-    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
 
 
 def start_webview():
