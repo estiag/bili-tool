@@ -10,7 +10,7 @@ while true; do
             rm -rf ./download ./build ./dist
             rm ./config/user.conf
             rm -r ./ffmpeg/windows
-            rm -r ./ffmpeg/mac
+            rm -r ./ffmpeg/linux
             sed -i '' "s/^ffmpeg_path =.*/ffmpeg_path = ffmpeg/mac/ffmpeg" ./config/system.conf
             mkdir download
             pyi-makespec --add-data "config/*.conf:config" --add-data "static:static" --add-data "templates:templates" --add-data "download:download" --add-data "ffmpeg:ffmpeg" --icon=static/favicon.ico --windowed bilitool.py
