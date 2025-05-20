@@ -54,7 +54,7 @@
             </div>
             <div class="card card-side overflow-hidden shadow-lg w-full max-h-32">
                 <figure>
-                    <img class="h-[130px]" :src="cover_url" v-show="cover_url" />
+                    <img style="max-height:130px" :src="cover_url" v-show="cover_url" />
                 </figure>
                 <div class="card-body truncate">
                     <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold" v-text="analyze_result.title"></p>

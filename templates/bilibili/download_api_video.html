@@ -50,7 +50,7 @@
             </div>
             <div class="card card-side shadow-lg w-full max-h-32">
                 <figure>
-                    <img class="h-[130px]" :src="data.pic" v-show="data.pic" />
+                    <img style="max-height:130px" :src="data.pic" v-show="data.pic" />
                 </figure>
                 <div class="card-body truncate">
                     <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold" v-text="data.title"></p>
@@ -85,7 +85,7 @@
                 </div>
                 <div class="card overflow-hidden card-side shadow-lg w-full max-h-24">
                     <figure>
-                        <img class="h-[100px]" :src="episode.first_frame" v-show="data.pic" />
+                        <img style="max-height:100px" :src="episode.first_frame" v-show="data.pic" />
                     </figure>
                     <div class="card-body p-4 truncate">
                         <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold"
