@@ -48,9 +48,9 @@
             <div class="flex items-center pr-2" v-show="data.videos > 1">
                 <input type="checkbox" class="checkbox checkbox-accent" v-model="checkAll" @click="clickCheckAll" />
             </div>
-            <div class="card card-side shadow-lg w-full">
+            <div class="card card-side shadow-lg w-full max-h-32">
                 <figure>
-                    <img class="max-h-32" :src="data.pic" v-show="data.pic" />
+                    <img style="max-width:230px" :src="data.pic" v-show="data.pic" />
                 </figure>
                 <div class="card-body truncate">
                     <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold" v-text="data.title"></p>
@@ -83,9 +83,9 @@
                     <input type="checkbox" class="checkbox checkbox-accent sub-p-checkbox" v-model="select_cids"
                         :value="episode.cid" @click="checkCid($event, episode.cid, episode.part)" />
                 </div>
-                <div class="card overflow-hidden card-side shadow-lg w-full">
+                <div class="card overflow-hidden card-side shadow-lg w-full max-h-24">
                     <figure>
-                        <img class="max-h-24" :src="episode.first_frame" v-show="data.pic" />
+                        <img style="max-width:170px" :src="episode.first_frame" v-show="data.pic" />
                     </figure>
                     <div class="card-body p-4 truncate">
                         <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold"

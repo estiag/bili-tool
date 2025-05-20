@@ -70,8 +70,8 @@ python bilitool.py
 
 # 打包应用(支持Windows/Linux/MacOS)
 注意: 需要安装pyinstaller `pip install pyinstaller`
-可以使用[build.bat](build.bat)(Windows)、 [build.sh](build.sh)(Linux/Mac) 打包，会自动清除不必要文件
 
+可以使用build-{platform}脚本 打包，会自动清除不必要文件
 1. 生成spec文件
 
    `pyi-makespec --add-data "config/*.conf:config" --add-data "static:static" --add-data "templates:templates" --add-data "download:download" --add-data "ffmpeg:ffmpeg" --icon=static/favicon.ico --windowed bilitool.py`
@@ -80,6 +80,7 @@ python bilitool.py
    `pyinstaller bilitool.spec`
 
 打包完成后，可在 dist 目录找到可执行文件。
+
 
 
 

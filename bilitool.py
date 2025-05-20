@@ -136,7 +136,7 @@ def analyze_bilibili_video():
         if not detail_json:
             return '无效的链接或BV码', 400
         return detail_json
-    except:
+    except Exception as e:
         return '无效的链接或BV码', 400
 
 
@@ -338,7 +338,7 @@ def set_settings_data():
 
 
 def start_server():
-    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
 
 
 def start_webview():
