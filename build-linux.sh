@@ -11,7 +11,7 @@ while true; do
             rm ./config/user.conf
             rm -r ./ffmpeg/windows
             rm -r ./ffmpeg/mac
-            sed -i "s/^ffmpeg_path =.*/ffmpeg_path = ffmpeg/linux/ffmpeg" ./config/system.conf
+            sed -i "s#^ffmpeg_path =.*#ffmpeg_path = ffmpeg/linux/ffmpeg#" ./config/system.conf
             mkdir download
             pyi-makespec --add-data "config/*.conf:config" --add-data "static:static" --add-data "templates:templates" --add-data "download:download" --add-data "ffmpeg:ffmpeg" --icon=static/favicon.ico --windowed bilitool.py
             pyinstaller bilitool.spec
