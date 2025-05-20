@@ -12,7 +12,7 @@ while true; do
             rm -r ./ffmpeg/windows
             rm -r ./ffmpeg/linux
             sed -i '' "s#^ffmpeg_path =.*#ffmpeg_path = ffmpeg/mac/ffmpeg#" ./config/system.conf
-            chmod +x ffmpeg/linux/ffmpeg
+            chmod +x ffmpeg/mac/ffmpeg
             mkdir download
             pyi-makespec \
               --add-data "config/*.conf:config" \
