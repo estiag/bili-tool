@@ -7,13 +7,22 @@ while true; do
     case "$choice" in
         y|Y )
             echo "Cleaning directories..."
-            rm -rf ./download ./build ./dist
+            rm -rf ./download ./build ./dist ./log
             rm ./config/user.conf
             rm -r ./ffmpeg/windows
             rm -r ./ffmpeg/linux
             sed -i '' "s#^ffmpeg_path =.*#ffmpeg_path = ffmpeg/mac/ffmpeg#" ./config/system.conf
+            chmod +x ffmpeg/linux/ffmpeg
             mkdir download
-            pyi-makespec --add-data "config/*.conf:config" --add-data "static:static" --add-data "templates:templates" --add-data "download:download" --add-data "ffmpeg:ffmpeg" --icon=static/favicon.ico --windowed bilitool.py
+            pyi-makespec \
+              --add-data "config/*.conf:config" \
+              --add-data "static:static" \
+              --add-data "templates:templates" \
+              --add-data "download:download" \
+              --add-data "ffmpeg:ffmpeg" \
+              --icon=static/favicon.ico \
+              --windowed bilitool.py
+
             pyinstaller bilitool.spec
             break
             ;;

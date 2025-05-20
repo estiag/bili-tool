@@ -52,9 +52,9 @@
             <div class="flex items-center pr-2" v-show="analyze_result.is_list">
                 <input type="checkbox" class="checkbox checkbox-accent" v-model="checkAll" @click="clickCheckAll" />
             </div>
-            <div class="card card-side overflow-hidden shadow-lg w-full">
+            <div class="card card-side overflow-hidden shadow-lg w-full max-h-32">
                 <figure>
-                    <img class="max-h-32" :src="cover_url" v-show="cover_url" />
+                    <img class="h-[130px]" :src="cover_url" v-show="cover_url" />
                 </figure>
                 <div class="card-body truncate">
                     <p class="ml-2 text-base text-ellipsis overflow-hidden font-bold" v-text="analyze_result.title"></p>
