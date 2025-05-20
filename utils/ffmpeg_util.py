@@ -12,12 +12,7 @@ def get_platform():
 
 
 def get_ffmpeg_exec():
-    if get_platform() == 'windows':
-        return get_ffmpeg_conf('ffmpeg_path')
-    if get_platform() == 'linux':
-        return 'ffmpeg'
-    if get_platform() == 'darwin':
-        return 'ffmpeg'
+    return get_ffmpeg_conf('ffmpeg_path')
 
 
 def combine_video(video_path, audio_path, save_path):
