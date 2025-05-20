@@ -76,7 +76,7 @@ python bilitool-server.py
 
 打包完成后，可在 dist 目录找到可执行文件。
 
-可以使用[build.bat](build.bat)(Windows)、 [build.sh](build.sh)(Linux/Mac) 打包，会自动清除不必要文件
+可以使用build-{platform} 打包，会自动清除不必要文件
 
 # 免责声明
 
