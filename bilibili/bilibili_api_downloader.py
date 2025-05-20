@@ -30,7 +30,7 @@ def analyze_video(bv_code_or_url):
         param.update({'bvid': bv_code})
     query = urlencode(param)
     result = Api(env=bilibili_common.env_bilibili_api).path(f'/x/web-interface/wbi/view?{query}') \
-        .headers(bilibili_common.get_base_headers()).send_and_get_json()
+        .headers(bilibili_common.get_base_headers()).verify(False).send_and_get_json()
     return result
 
 
