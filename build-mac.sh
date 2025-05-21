@@ -3,16 +3,14 @@
 echo "start build..."
 
 while true; do
-    read -p "This action will clear folder[download, build, log, dist, config/user.conf] do you want to continue? [y/n] " choice
+    read -p "This action will clear folder[download, log, config/user.conf] do you want to continue? [y/n] " choice
     case "$choice" in
         y|Y )
             echo "Cleaning directories..."
-            rm -rf ./download ./build ./dist ./log
+            rm -rf ./download ./log
             rm ./config/user.conf
             rm -r ./ffmpeg/windows
             rm -r ./ffmpeg/linux
-            rm -r ./bilitool.build
-            rm -r ./bilitool.dist
             sed -i '' "s#^ffmpeg_path =.*#ffmpeg_path = ffmpeg/mac/ffmpeg#" ./config/system.conf
             chmod +x ffmpeg/mac/ffmpeg
             mkdir download
