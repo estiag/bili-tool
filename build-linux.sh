@@ -3,7 +3,7 @@
 echo "start build..."
 
 while true; do
-    read -p "This action will clear folder[./download, ./build, ./log, ./dist, ./config/user.conf] do you want to continue? [y/n] " choice
+    read -p "This action will clear folder[download, build, log, dist, config/user.conf] do you want to continue? [y/n] " choice
     case "$choice" in
         y|Y )
             echo "Cleaning directories..."
@@ -11,19 +11,22 @@ while true; do
             rm ./config/user.conf
             rm -r ./ffmpeg/windows
             rm -r ./ffmpeg/mac
+            rm -r ./bilitool.build
+            rm -r ./bilitool.dist
             sed -i "s#^ffmpeg_path =.*#ffmpeg_path = ffmpeg/linux/ffmpeg#" ./config/system.conf
             chmod +x ffmpeg/linux/ffmpeg
             mkdir download
-            pyi-makespec \
-              --add-data "config/*.conf:config" \
-              --add-data "static:static" \
-              --add-data "templates:templates" \
-              --add-data "download:download" \
-              --add-data "ffmpeg:ffmpeg" \
-              --icon=static/favicon.ico \
-              --windowed bilitool.py
 
-            pyinstaller bilitool.spec
+            python -m nuitka --standalone \
+            --macos-create-app-bundle \
+            --include-data-dir=config=config \
+            --include-data-dir=static=static \
+            --include-data-dir=templates=templates \
+            --include-data-dir=download=download \
+            --include-data-dir=ffmpeg=ffmpeg \
+            --macos-app-icon=static/favicon.icns \
+            bilitool.py
+
             break
             ;;
         n|N )
