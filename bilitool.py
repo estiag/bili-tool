@@ -129,7 +129,8 @@ def get_bilibili_cover_and_save():
         bili_down.get_cover_and_save(url_or_bvcode)
         return 'ok'
     except Exception as e:
-        logger.error(e)
+        logger.info(e)
+        logger.info('download error', exc_info=True)
         return '下载失败', 500
 
 

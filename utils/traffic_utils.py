@@ -36,7 +36,7 @@ def download_with_progress(resp, path):
             percent = downloaded / total_size * 100
             if chunk:
                 print(
-                    f'\r下载进度 {percent:.2f}%: [{"|" * int(percent // 2)}{" " * int((100 - percent) // 2)}]',
+                    f'\r{percent:.2f}%: [{"|" * int(percent // 2)}{" " * int((100 - percent) // 2)}]',
                     end="", flush=True)
                 f.write(chunk)
 
