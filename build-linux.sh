@@ -11,8 +11,6 @@ while true; do
             echo "Cleaning directories..."
             if [ -d "./download" ]; then
               rm -rf ./download
-            else
-              mkdir download
             fi
             if [ -d "./log" ]; then
               rm -rf ./log
@@ -20,6 +18,7 @@ while true; do
             if [ -f "./config/user.conf" ]; then
               rm ./config/user.conf
             fi
+            mkdir download
             sed -i "s#^ffmpeg_path =.*#ffmpeg_path = ffmpeg/linux/ffmpeg#" ./config/system.conf
             chmod +x ffmpeg/linux/ffmpeg
 

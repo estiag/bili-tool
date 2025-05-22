@@ -18,9 +18,8 @@ IF EXIST ".\log" (
 )
 IF EXIST ".\config\user.conf" (
     del ".\config\user.conf"
-) ELSE (
-    mkdir download
 )
+mkdir download
 
 python -m nuitka --standalone --windows-console-mode=disable ^
             --include-data-dir=config=config ^
