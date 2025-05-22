@@ -10,11 +10,17 @@ echo "Please input y or n"
 goto confirm
 
 :yes
-rd /s /q ".\download"
-rd /s /q ".\log"
-del ".\config\user.conf"
-
-mkdir download
+IF EXIST ".\download" (
+    rd /s /q ".\download"
+)
+IF EXIST ".\log" (
+    rd /s /q ".\log"
+)
+IF EXIST ".\config\user.conf" (
+    del ".\config\user.conf"
+) ELSE (
+    mkdir download
+)
 
 python -m nuitka --standalone --windows-console-mode=disable ^
             --include-data-dir=config=config ^
@@ -22,7 +28,7 @@ python -m nuitka --standalone --windows-console-mode=disable ^
             --include-data-dir=templates=templates ^
             --include-data-dir=download=download ^
             --include-data-files=./ffmpeg/windows/ffmpeg.exe=ffmpeg/windows/ffmpeg.exe ^
-            --windows-icon-from-ico=./static/favicon.png ^
+            --windows-icon-from-ico=static/favicon.png ^
             bilitool.py
 
 :no

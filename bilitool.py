@@ -11,7 +11,7 @@ from utils.conf_util import get_bilibili_conf, set_bilibili_conf
 from utils import conf_util
 
 # logger需要再引入自定义模块之前加载，否则会先加载自定义模块中的logger
-logger = get_logger('serverHandler')
+logger = get_logger()
 
 import bilibili.bilibili_downloader as bili_down
 import bilibili.bilibili_api_downloader as bili_api_down
@@ -123,9 +123,14 @@ def get_bilibili_cover():
 
 @app.route("/bilibili/cover/save", methods=['GET'])
 def get_bilibili_cover_and_save():
-    url_or_bvcode = request.args.get('url')
-    bili_down.get_cover_and_save(url_or_bvcode)
-    return 'ok'
+    try:
+        url_or_bvcode = request.args.get('url')
+        logger.info(f'url is {url_or_bvcode}')
+        bili_down.get_cover_and_save(url_or_bvcode)
+        return 'ok'
+    except Exception as e:
+        logger.error(e)
+        return '下载失败', 500
 
 
 @app.route("/bilibili/video/analyze", methods=['GET'])
