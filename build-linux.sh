@@ -9,20 +9,17 @@ while true; do
             echo "Cleaning directories..."
             rm -rf ./download ./log
             rm ./config/user.conf
-            rm -r ./ffmpeg/windows
-            rm -r ./ffmpeg/mac
             sed -i "s#^ffmpeg_path =.*#ffmpeg_path = ffmpeg/linux/ffmpeg#" ./config/system.conf
             chmod +x ffmpeg/linux/ffmpeg
             mkdir download
 
-            python -m nuitka --standalone \
-            --macos-create-app-bundle \
+            python -m nuitka --standalone --windows-console-mode=disable \
             --include-data-dir=config=config \
             --include-data-dir=static=static \
             --include-data-dir=templates=templates \
             --include-data-dir=download=download \
-            --include-data-dir=ffmpeg=ffmpeg \
-            --macos-app-icon=static/favicon.icns \
+            --include-data-files=./ffmpeg/linux/ffmpeg=ffmpeg/linux/ffmpeg \
+            --windows-icon-from-ico=./static/favicon.ico \
             bilitool.py
 
             break

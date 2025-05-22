@@ -12,20 +12,17 @@ goto confirm
 :yes
 rd /s /q ".\download"
 rd /s /q ".\log"
-rd /s /q ".\ffmpeg\linux"
-rd /s /q ".\ffmpeg\mac"
 del ".\config\user.conf"
 
 mkdir download
 
-python -m nuitka --standalone ^
-            --macos-create-app-bundle ^
+python -m nuitka --standalone --windows-console-mode=disable ^
             --include-data-dir=config=config ^
             --include-data-dir=static=static ^
             --include-data-dir=templates=templates ^
             --include-data-dir=download=download ^
-            --include-data-dir=ffmpeg=ffmpeg ^
-            --macos-app-icon=static/favicon.icon ^
+            --include-data-files=./ffmpeg/windows/ffmpeg.exe=ffmpeg/windows/ffmpeg.exe ^
+            --windows-icon-from-ico=./static/favicon.png ^
             bilitool.py
 
 :no

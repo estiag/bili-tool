@@ -67,16 +67,12 @@ python bilitool-server.py
 python bilitool.py
 ```
 
-
 # 打包应用(支持Windows/Linux/MacOS)
 注意: 需要安装nuitka `pip install nuitka`
 
-可以使用脚本[build-windows.bat](build-windows.bat) / [build-mac.sh](build-mac.sh) / [build-linux.sh](build-linux.sh)打包，会自动清除不必要文件
-
+可以使用脚本[build-windows.bat](build-windows.bat) / [build-mac.sh](build-mac.sh) / [build-linux.sh](build-linux.sh)打包，会自动清除不必要文件.
+如果使用虚拟环境在虚拟环境中使用source命令执行脚本
 打包完成后，可在 bilitool.dist 目录找到可执行文件。
-
-
-
 
 # 免责声明
 
