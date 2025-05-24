@@ -23,14 +23,17 @@ BiliTool 是一款功能强大的哔哩哔哩媒体下载工具，支持多种�
 # 安装与使用
 
 ## 直接使用（推荐普通用户）
+下载最新发行版本 -> 解压压缩包
 
-    下载最新发行版本
-
-    解压压缩包
-
-    运行 bilitool.exe
-
-    默认下载路径：_internal/download/bilibili/video（可在设置中修改）
+### windows
+运行 bilitool.exe  
+默认下载路径：C:\Users\<用户名>\Downloads\bilitool-download\（可在设置页面中修改）
+### MacOS
+运行bilitool.app  
+默认下载路径：/<用户名>/Downloads/bilitool-download/（可在设置页面中修改）
+### Linux
+运行bilitool/bilitool.bin  
+默认下载路径：/<用户名>/Downloads/bilitool-download/（可在设置页面中修改）
 
 ## 开发者模式
 
