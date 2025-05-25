@@ -5,37 +5,54 @@ BiliTool 是一款功能强大的哔哩哔哩媒体下载工具，支持多种�
 
 # 🚀 主要功能
 
-    视频下载 - 支持多种清晰度选择
-
-    封面下载 - 一键保存视频封面图
-
-    关注列表 - 查看关注UP主
-
-    文件预览 - 下载前预览媒体内容
-
-    多模式使用：
-
-        交互式命令行界面
-
-        HTTP 网页服务
-
-        打包成独立Windows应用
+```
+视频下载 - 支持多种清晰度选择
+封面下载 - 一键保存视频封面图
+关注列表 - 查看关注UP主
+文件预览 - 下载前预览媒体内容
+多模式使用：
+    交互式命令行界面
+    HTTP 网页服务
+    打包成独立Windows应用
+```
 
 # 安装与使用
 
 ## 直接使用（推荐普通用户）
+
 下载最新发行版本 -> 解压压缩包
 
 ### windows
-运行 bilitool.exe  
-默认下载路径：C:\Users\<用户名>\Downloads\bilitool-download\（可在设置页面中修改）
-### MacOS
-运行bilitool.app  
-默认下载路径：/<用户名>/Downloads/bilitool-download/（可在设置页面中修改）
-### Linux
-运行bilitool/bilitool.bin  
-默认下载路径：/<用户名>/Downloads/bilitool-download/（可在设置页面中修改）
 
+运行 bilitool.exe  
+默认下载路径：C:\Users\<用户名>\Downloads\bilitool-download（可在设置页面中修改）
+
+### MacOS
+
+运行bilitool.app  
+默认下载路径：/Users/<你的用户名>/Downloads/bilitool-download（可在设置页面中修改）
+
+### Linux
+
+运行bilitool/bilitool.bin  
+默认下载路径：/Users/<你的用户名>/Downloads/bilitool-download（可在设置页面中修改）
+
+### 常见问题
+
+#### 程序运行不了怎么办？
+
+```
+windows系统右击压缩包，属性 → 勾选“解除锁定”，然后再解压缩运行
+```
+
+#### 下载的文件在哪？
+
+```
+默认情况下在系统的“下载”文件夹的bilitool-download
+windows默认下载路径在 C:\Users\<你的用户名>\Downloads\bilitool-download
+MacOS、Linux默认下载路径在 /Users/<你的用户名>/Downloads/bilitool-download
+如果你想更改下载的路径，在程序的主页界面右上角设置中修改
+```
 
 ## 开发者模式
 
@@ -47,7 +64,9 @@ cd bilitool
 ```
 
 ### 安装依赖
+
 推荐使用python虚拟环境
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -57,6 +76,7 @@ pip install -r requirements.txt
 ```bash
 python bilitool-console.py
 ```
+
 按照提示操作
 
 #### 运行方式二：HTTP服务器模式
@@ -64,7 +84,8 @@ python bilitool-console.py
 ```bash
 python bilitool-server.py
 ```
-使用浏览器访问 http://localhost:5000 
+
+使用浏览器访问 http://localhost:5000
 
 #### 运行方式三：带界面的
 
@@ -72,14 +93,57 @@ python bilitool-server.py
 python bilitool.py
 ```
 
-# 打包应用(支持Windows/Linux/MacOS)
+### 打包应用(支持Windows/Linux/MacOS)
+
 注意: 需要安装nuitka `pip install nuitka`
 
-可以使用脚本[build-windows.bat](build-windows.bat) / [build-mac.sh](build-mac.sh) / [build-linux.sh](build-linux.sh)打包，会自动清除不必要文件.
+可以使用脚本[build-windows.bat](build-windows.bat) / [build-mac.sh](build-mac.sh) / [build-linux.sh](build-linux.sh)
+打包，会自动清除不必要文件.
 如果使用虚拟环境在虚拟环境中使用source命令执行脚本
 打包完成后，可在 bilitool.dist 目录找到可执行文件。
 
-# 技术栈
+### 常见问题
+
+#### ● MacOS找不到命令`pyi-makespec` `pyinstaller`
+
+需要安装pyinstaller后设置环境变量 ：执行`nano ~/.zshrc` 在文件末尾添加python的bin目录，执行`source ~/.zshrc`
+
+#### ● pyinstaller制作可执行文件时报错：ERROR: Unable to find '/Users/estiag/bili-tool/download' when adding binary and data files.
+
+手动创建一个在项目根目录download目录
+
+#### ● pyinstaller制作可执行文件时报错：ModuleNotFoundError: No module named 'PIL'
+
+安装 Pillow 库`pip install pillow`
+
+#### ● 出现无限调用main
+
+https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
+
+#### ● 运行bilitool.py出现 webview.errors.WebViewException: You must have either QT or GTK with Python extensions installed in order to use pywebview.
+
+查看https://pywebview.flowrl.com/3.7/guide/installation.html#dependencies 安装对应依赖
+
+```shell
+pip install pywebview[qt]
+```
+
+#### 运行pip install -r requirements.txt出现 AttributeError: module 'pkgutil' has no attribute 'ImpImporter'. Did you mean: 'zipimporter'?
+
+python3.13版本的可以尝试以下requirements
+
+```commandline
+beautifulsoup4==4.13.4
+cachetools==6.0.0b4
+flask==3.1.1
+numpy==2.2.6
+pywebview==5.4
+qrcode==8.2
+requests==2.32.3
+setuptools==80.7.1
+```
+
+## 技术栈
 
 - flask: web服务器
 - requests: 发送http请求
@@ -92,32 +156,6 @@ python bilitool.py
 - pyinstaller: 制作exe文件
 - rivulet: 一个链式http处理库 https://gitee.com/estiag/rivulet.git
 
-# 常见问题
-### ● MacOS找不到命令`pyi-makespec` `pyinstaller`
-需要安装pyinstaller后设置环境变量 ：执行`nano ~/.zshrc` 在文件末尾添加python的bin目录，执行`source ~/.zshrc`
-### ● pyinstaller制作可执行文件时报错：ERROR: Unable to find '/Users/estiag/bili-tool/download' when adding binary and data files.
-手动创建一个在项目根目录download目录
-### ● pyinstaller制作可执行文件时报错：ModuleNotFoundError: No module named 'PIL'
-安装 Pillow 库`pip install pillow`
-### ● 出现无限调用main
-https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
-### ● 运行bilitool.py出现 webview.errors.WebViewException: You must have either QT or GTK with Python extensions installed in order to use pywebview.
-查看https://pywebview.flowrl.com/3.7/guide/installation.html#dependencies 安装对应依赖
-```shell
-pip install pywebview[qt]
-```
-### 运行pip install -r requirements.txt出现 AttributeError: module 'pkgutil' has no attribute 'ImpImporter'. Did you mean: 'zipimporter'?
-python3.13版本的可以尝试以下requirements
-```commandline
-beautifulsoup4==4.13.4
-cachetools==6.0.0b4
-flask==3.1.1
-numpy==2.2.6
-pywebview==5.4
-qrcode==8.2
-requests==2.32.3
-setuptools==80.7.1
-```
 # 免责声明
 
 1. 版权声明‌
