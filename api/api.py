@@ -173,7 +173,7 @@ class Api:
         self.__query = ''
         self.__fragment = ''
         self.__headers = {'Content-Type': 'application/json'}
-        self.__verify = True
+        self.__verify = False
         self.__env = None
         self.__proxy = None
         self.__body = None

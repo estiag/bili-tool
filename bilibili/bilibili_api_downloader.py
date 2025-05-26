@@ -41,7 +41,7 @@ def get_cover(url):
 
 def get_login_qrimg():
     data = Api('https://passport.bilibili.com/x/passport-login/web/qrcode/generate').headers(
-        bilibili_common.get_base_headers()).send_and_get_json()
+        bilibili_common.get_base_headers()).verify(False).send_and_get_json()
 
     # 创建二维码对象
     qr = qrcode.QRCode(

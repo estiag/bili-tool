@@ -29,7 +29,7 @@ def get_video_detail(bv_code_or_url):
         param.update({'bvid': bv_code})
     query = urlencode(param)
     Api(env=bilibili_common.env_bilibili_api).path(f'/x/web-interface/wbi/view?{query}') \
-        .headers(bilibili_common.get_headers()).send_and_print()
+        .headers(bilibili_common.get_headers()).verify(False).send_and_print()
 
 
 def get_detail_callback(resp, api_result):
@@ -223,7 +223,7 @@ def get_cover_and_save(url):
     下载指定url的视频封面
     对外提供
     """
-    get_detail_api = Api(bilibili_common.format_url(url)).headers(bilibili_common.get_headers()).callback(
+    get_detail_api = Api(bilibili_common.format_url(url)).headers(bilibili_common.get_headers()).verify(False).callback(
         get_detail_callback)
     get_detail_api.then(Api(get_cover_url).headers(bilibili_common.get_headers())
                         .callback(get_cover_callback)).verify(False).send()

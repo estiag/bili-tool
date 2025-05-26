@@ -129,8 +129,7 @@ def get_bilibili_cover_and_save():
         bili_down.get_cover_and_save(url_or_bvcode)
         return 'ok'
     except Exception as e:
-        logger.info(e)
-        logger.info('download error', exc_info=True)
+        logger.error(e)
         return '下载失败', 500
 
 
@@ -143,6 +142,7 @@ def analyze_bilibili_video():
             return '无效的链接或BV码', 400
         return detail_json
     except Exception as e:
+        logger.error(e)
         return '无效的链接或BV码', 400
 
 
@@ -255,6 +255,7 @@ def get_bilibili_user_info(vmid):
         data.update({'face': f'/bilibili/info/avatar?url={data.get("face")}'})
         return data
     except Exception as e:
+        logger.error(e)
         return '未登录', 500
 
 
@@ -266,7 +267,8 @@ def get_bilibili_user_card_info(vmid):
             return make_response(resp.get('message'), 500)
         data = resp.get('data')
         return data
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         return '未登录', 500
 
 
@@ -303,7 +305,8 @@ def bilibili_current_user():
 def get_current_theme():
     try:
         return conf_util.get_user_conf('theme')
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         return 'light'
 
 
