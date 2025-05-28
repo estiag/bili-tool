@@ -2,7 +2,6 @@ import io
 import threading
 from multiprocessing import freeze_support
 
-
 import webview
 from config.logger_config import get_logger
 from flask import Flask, render_template, request, send_file, make_response, send_from_directory, Response
@@ -31,6 +30,12 @@ def favicon():
 def index():
     global webview_mode
     return render_template("index.html", webview_mode=webview_mode)
+
+
+@app.route("/bilibili/logout", methods=['GET'])
+def bilibili_logout():
+    bilibili_common.clear_user_info()
+    return 'ok'
 
 
 @app.route("/settings")
@@ -100,7 +105,8 @@ def get_bilibili_followings(vmid):
             face = i.get('face')
             i.update({'face_url': f'/bilibili/info/avatar?url={face}'})
         return data
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         return '未登录', 500
 
 
@@ -117,7 +123,8 @@ def get_bilibili_cover():
         url_or_bvcode = request.args.get('url')
         resp = bili_down.get_cover(url_or_bvcode)
         return send_file(io.BytesIO(resp.content), mimetype=resp.headers['Content-Type'])
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         return '解析失败', 400
 
 
@@ -191,7 +198,7 @@ def analyze_bilibili_video_api():
                 each_video_result = bili_api_down.get_video_info(bvid=bilibili_common.get_bv_code(url_or_bvcode),
                                                                  cid=each_video.get('cid'))
                 support_formats = each_video_result.get('data').get('support_formats')
-                if not bili_api_down.get_current_vmid():
+                if not bilibili_common.get_current_vmid():
                     for each_format in support_formats:
                         if each_format.get('quality') > 32:
                             each_format.update({'new_description': each_format.get('new_description') + '(需登录)'})
@@ -298,7 +305,7 @@ def get_bilibili_img_download_stream():
 
 @app.route("/bilibili/user/current", methods=['GET'])
 def bilibili_current_user():
-    return bili_api_down.get_current_vmid()
+    return bilibili_common.get_current_vmid()
 
 
 @app.route("/system/user/theme", methods=['GET'])

@@ -2,11 +2,11 @@ from api.api import Env
 from urllib.parse import urlparse, urlunparse
 import utils.validate_util as validate_util
 from utils import conf_util
-
+from config.logger_config import get_logger
 env_bilibili = Env(host='www.bilibili.com', protocol='https')
 env_bilibili_api = Env(host='api.bilibili.com', protocol='https')
 env_bilibili_video = Env(host='cn-jsnt-ct-01-52.bilivideo.com', protocol='https')
-
+logger = get_logger()
 
 def reorganize_title(title):
     """
@@ -72,4 +72,17 @@ def get_bv_code(url):
         else:
             return urlparse(url).path.strip('/').split('/')[-1]
     except Exception:
+        return ''
+
+
+def clear_user_info():
+    conf_util.set_user_conf('bilibili_current_vmid', '')
+    conf_util.set_user_conf('bilibili_cookie', '')
+
+
+def get_current_vmid():
+    try:
+        return conf_util.get_user_conf('bilibili_current_vmid')
+    except Exception as e:
+        logger.error('get current vmid error', exc_info=True)
         return ''

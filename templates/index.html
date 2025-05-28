@@ -8,6 +8,7 @@
     if (localStorage.getItem('theme')) {
       document.getElementsByTagName('html')[0].dataset.theme = localStorage.getItem('theme')
     }
+
   </script>
   <script src="{{ url_for('static', filename='js/vue.js') }}"></script>
   <script src="{{ url_for('static', filename='js/alert.js') }}"></script>
@@ -57,17 +58,25 @@
           <h3 class="text-md font-medium inline-flex" v-text="tool.name"></h3>
           <h3 class="text-md font-medium inline-flex" v-if="tool.name == 'bilibili' && userinfo.name">
             (已登录)</h3>
-          <div v-if="tool.name == 'bilibili' && userinfo.name" class="ml-auto inline-flex items-center cursor-pointer"
-            @click="toUserinfo">
-            <p class="pr-2 font-medium inline-flex truncate" v-text="userinfo.name" :title="userinfo.uname"></p>
-            <div class="avatar inline-flex">
-              <div class="w-10 rounded">
-                <img :src="userinfo.face" />
+          <!-- 头像区 -->
+          <div class="dropdown dropdown-end ml-auto" v-if="tool.name == 'bilibili' && userinfo.name">
+            <div tabindex="0" class="">
+              <div class="inline-flex items-center cursor-pointer">
+                <p class="pr-2 font-medium inline-flex truncate" v-text="userinfo.name" :title="userinfo.uname"></p>
+                <div class="avatar inline-flex">
+                  <div class="w-10 rounded">
+                    <img :src="userinfo.face" />
+                  </div>
+                </div>
               </div>
             </div>
+            <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-32 p-2 shadow-sm">
+              <li @click="biliLogout"><a>退出</a></li>
+            </ul>
           </div>
+
           <div v-else class='inline-flex ml-auto'>
-            <h3 class="text-md hover:text-accent font-medium cursor-pointer" @click="toLogin">登录bilibili</h3>
+            <h3 class="text-md hover:text-accent font-medium cursor-pointer" @click="bili_pop_qr">登录bilibili</h3>
           </div>
         </div>
         <div class="justify-content-start w-100 mb-4 text-start">
@@ -80,12 +89,26 @@
         </div>
       </div>
     </div>
+    <dialog id="bili_login" class="modal">
+      <div class="modal-box max-w-5xl grid justify-items-center">
+        <form method="dialog">
+          <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" @click="closeBiliLogin">✕</button>
+        </form>
+        <h3 class="text-lg font-bold">请使用Bilibili客户端扫码</h3>
+        <img class="max-w-80" :src="bili_login.img" />
+      </div>
+    </dialog>
   </div>
 </body>
 <script>
+  var bili_qr_timer;
   var app = new Vue({
     el: '#app',
     data: {
+      bili_login: {
+        img: '',
+        qrcode_key: ''
+      },
       userinfo: {},
       vmid: '',
       isDark: false,
@@ -93,7 +116,7 @@
         {
           name: 'bilibili',
           subTools: [
-            {
+           /*  {
               name: '用户',
               groups: [
                 {
@@ -109,7 +132,7 @@
                   href: '/bilibili/info/user/view'
                 }
               ]
-            }, {
+            }, */ {
               name: '下载',
               groups:
                 [
@@ -180,14 +203,61 @@
 
     },
     methods: {
+      biliLogout: function () {
+        axios.get('/bilibili/logout').then(response => {
+          app.userinfo = {}
+        }).catch(error => {
+          console.error(error);
+        });
+      },
+      closeBiliLogin: function () {
+        clearInterval(bili_qr_timer)
+        app.bili_login.img = ''
+        app.bili_login.qrcode_key = ''
+        bili_login.close()
+      },
+      show_bili_qrcode: function () {
+        axios.get('/bilibili/api/qrimg')
+          .then(response => {
+            app.bili_login.img = response.data.img
+            app.bili_login.qrcode_key = response.data.qrcode_key
+            bili_qr_timer = setInterval(function () {
+              axios.get('/bilibili/api/qrscan?qrcode_key=' + app.bili_login.qrcode_key)
+                .then(response => {
+                  if (response.data.code == 0) {
+                    clearInterval(bili_qr_timer)
+                    console.log('登陆成功')
+                    //location.href='/bilibili/info/user/view?vmid='+response.data.vmid
+                    location.href = '/'
+                  } else {
+                    console.log(response.data.message)
+                  }
+
+                })
+                .catch(error => {
+                  console.error(error);
+                });
+            }, 5000)
+          })
+          .catch(error => {
+            console.error(error);
+          });
+      },
       toSettings: function () {
         location.href = '/settings'
+      },
+      bili_pop_qr: function () {
+        bili_login.showModal()
+        this.show_bili_qrcode()
       },
       toLogin: function () {
         location.href = '/bilibili/api/login/view'
       },
       toUserinfo: function () {
         location.href = '/bilibili/info/user/view'
+      },
+      toHelp:function(){
+        location.href = '/help/view'
       }
     },
     watch: {
@@ -206,6 +276,7 @@
       }
     }
   })
+
 
 
 
