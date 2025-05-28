@@ -22,13 +22,16 @@ while true; do
             sed -i "s#^ffmpeg_path =.*#ffmpeg_path = ffmpeg/linux/ffmpeg#" ./config/system.conf
             chmod +x ffmpeg/linux/ffmpeg
 
-            python -m nuitka --standalone --windows-console-mode=disable \
-            --include-data-dir=config=config \
-            --include-data-dir=static=static \
-            --include-data-dir=templates=templates \
-            --include-data-dir=download=download \
-            --include-data-files=./ffmpeg/linux/ffmpeg=ffmpeg/linux/ffmpeg \
-            bilitool.py
+            pyi-makespec \
+              --add-data "config/*.conf:config" \
+              --add-data "static:static" \
+              --add-data "templates:templates" \
+              --add-data "download:download" \
+              --add-data "ffmpeg:ffmpeg" \
+              --icon=static/favicon.ico \
+              --windowed bilitool.py
+
+            pyinstaller bilitool.spec
 
             break
             ;;
